@@ -6,7 +6,7 @@ void main() {
 }
 
 class ExposureCalculatorApp extends StatelessWidget {
-  const ExposureCalculatorApp({Key? key}) : super(key: key);
+  const ExposureCalculatorApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class ExposureCalculatorApp extends StatelessWidget {
 }
 
 class ExposureCalculatorScreen extends StatefulWidget {
-  const ExposureCalculatorScreen({Key? key}) : super(key: key);
+  const ExposureCalculatorScreen({super.key});
 
   @override
   State<ExposureCalculatorScreen> createState() => _ExposureCalculatorScreenState();
