@@ -17,15 +17,15 @@ class _MainScreenState extends State<MainScreen> {
   late final Map<String, double> _isoMap;
   late final Map<String, double> _ndFilterMap;
 
-  // Current Exposure の宣言と初期値
-  String currentApertureKey = '5.6';
-  String currentShutterKey = '1/125';
-  String currentISOKey = '100';
+  // Current Exposure の宣言
+  late String currentApertureKey;
+  late String currentShutterKey;
+  late String currentISOKey;
 
-  // New Exposure の宣言と初期値
-  String newApertureKey = '5.6';
-  String newISOKey = '100';
-  String selectedNdFilterKey = 'No Filter';
+  // New Exposure の宣言
+  late String newApertureKey;
+  late String newISOKey;
+  late String selectedNdFilterKey;
 
   // 計算結果
   double calculatedShutterSeconds = 0.0;
@@ -41,6 +41,15 @@ class _MainScreenState extends State<MainScreen> {
     _shutterMap = generateThirdStopShutterMap();
     _isoMap = generateThirdStopISOMap();
     _ndFilterMap = generateNDFilterMap();
+
+    currentApertureKey = _apertureMap.keys.toList()[defaultCurrentApertureIndex];
+    currentShutterKey = _shutterMap.keys.toList()[defaultCurrentSSIndex];
+    currentISOKey = _isoMap.keys.toList()[defaultCurrentISOIndex];
+
+    newApertureKey = _apertureMap.keys.toList()[defaultNewApertureIndex];
+    newISOKey = _isoMap.keys.toList()[defaultNewISOIndex];
+    selectedNdFilterKey = _ndFilterMap.keys.toList()[defaultNDIndex];
+
     _calculateExposure();
 
     print('\n===Loaded Maps===');
@@ -67,12 +76,20 @@ class _MainScreenState extends State<MainScreen> {
     print('Only Full Stops     : ${generateFullStopISOMap().keys}\n');
 
     print('===ND Filter===');
-    print('ND Filter: ${_ndFilterMap}\n');
+    print('ND Filter: $_ndFilterMap\n');
 
     print('===Base Values===');
     print('Aperture: F${_apertureMap.keys.toList()[f1Index]}');
     print('SS      : ${_shutterMap.keys.toList()[ss1Index]}');
-    print('ISO     : ${_isoMap.keys.toList()[iso100Index]}');
+    print('ISO     : ${_isoMap.keys.toList()[iso100Index]}\n');
+
+    print('===Default Values===');
+    print('Current Aperture: F${_apertureMap.keys.toList()[defaultCurrentApertureIndex]}');
+    print('Current SS      : ${_shutterMap.keys.toList()[defaultCurrentSSIndex]}');
+    print('Current ISO     : ${_isoMap.keys.toList()[defaultCurrentISOIndex]}');
+    print('New Aperture    : F${_apertureMap.keys.toList()[defaultNewApertureIndex]}');
+    print('New ISO         : ${_isoMap.keys.toList()[defaultNewISOIndex]}');
+    print('ND Filter       : ${_ndFilterMap.keys.toList()[defaultNDIndex]}');
   }
 
   /// ストップの差分を合計して、新シャッター速度を計算

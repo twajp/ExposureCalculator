@@ -23,6 +23,14 @@ const List<int> ndFilterList = [1, 2, 4, 8, 16, 32, 64, 100, 128, 256, 400, 512,
 // };
 
 // 1/3段刻みのみ想定
-const int f1Index = 6;
-const int ss1Index = 45;
-const int iso100Index = 21;
+const int f1Index = 6; // F1
+const int ss1Index = 45; // 1s
+const int iso100Index = 21; // ISO100
+
+const int defaultCurrentApertureIndex = f1Index + 3 * 5; // F5.6
+const int defaultCurrentSSIndex = ss1Index - 3 * 7; // 1/125s
+const int defaultCurrentISOIndex = iso100Index + 3 * 2; // ISO400
+
+const int defaultNewApertureIndex = f1Index + 3 * 5; // F5.6
+const int defaultNewISOIndex = iso100Index; // ISO100
+const int defaultNDIndex = 0; // No Filter
