@@ -4,7 +4,7 @@ It calculates the exposure triangle based on the user's input.
 The user can enter current settings and new settings such as aperture, shutter speed, ISO sensitivity, and ND filter values.  
 The app then calculates the new shutter speed.  
 
-## How to get the app
+## How to use
 You can download the app from the following links:  
 * ~~App Store~~
 * ~~Google Play Store~~
