@@ -1,16 +1,10 @@
-# exposure_calculator
+# Exposure Calculator
+This is a simple exposure calculator for photographers.
+It calculates the exposure triangle based on the user's input.
+The user can input current settings and new settings such as aperture, shutter speed, ISO sensitivity, and ND Filter values.
+And the app will calculate new shutter speed.
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## How to get this app
+You can download the app from the following links:  
+* App Store
+* Google Play Store
