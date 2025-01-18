@@ -178,7 +178,7 @@ class _MainScreenState extends State<MainScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('Shutter: '),
+                const Text('Shutter Speed: '),
                 DropdownButton<double>(
                   value: _shutterMap[currentShutterKey],
                   items: _shutterMap.keys
@@ -304,7 +304,7 @@ class _MainScreenState extends State<MainScreen> {
             const SizedBox(height: 20),
             // 結果表示
             Text(
-              'Shutter: ${formatSeconds(calculatedShutterSeconds)}',
+              'Shutter Speed: ${formatSeconds(_shutterMap, calculatedShutterSeconds)}',
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
