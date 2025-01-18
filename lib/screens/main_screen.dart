@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../helpers/math_helper.dart';
 import '../utils/constants.dart';
@@ -70,16 +71,6 @@ class _MainScreenState extends State<MainScreen> {
     print('ISO     : ${_isoMap.keys.toList()[iso100Index]}');
   }
 
-  // 便利関数: log2(x)
-  double _log2(double x) {
-    return (x > 0) ? (MathHelper.logE(x) / MathHelper.logE(2)) : 0;
-  }
-
-  // 便利関数: 2^(x)
-  double _pow2(double x) {
-    return MathHelper.expE(MathHelper.logE(2) * x);
-  }
-
   /// ストップの差分を合計して、新シャッター速度を計算
   void _calculateExposure() {
     // 現在のシャッター速度（秒）
@@ -90,12 +81,12 @@ class _MainScreenState extends State<MainScreen> {
     // ここでは厳密計算: stop = log2((NewF / OldF)^2)
     double currentApertureValue = _apertureMap[currentApertureKey]!;
     double newApertureValue = _apertureMap[newApertureKey]!;
-    double apertureStop = _log2((newApertureValue / currentApertureValue) * (newApertureValue / currentApertureValue));
+    double apertureStop = log2((newApertureValue / currentApertureValue) * (newApertureValue / currentApertureValue));
 
     // ISO のストップ差: stop = log2(OldISO / NewISO)
     double currentISOValue = _isoMap[currentISOKey]!;
     double newISOValue = _isoMap[newISOKey]!;
-    double isoStop = _log2(currentISOValue / newISOValue);
+    double isoStop = log2(currentISOValue / newISOValue);
 
     // ND フィルターの stop
     double ndStop = ndFilterMap[selectedNdFilterKey]!;
@@ -104,7 +95,7 @@ class _MainScreenState extends State<MainScreen> {
     double totalStop = apertureStop + isoStop + ndStop;
 
     // 新シャッター速度 = 現在のシャッター速度 * 2^(totalStop)
-    double newShutterSec = currentShutterSec * _pow2(totalStop);
+    double newShutterSec = currentShutterSec * pow2(totalStop);
 
     setState(() {
       calculatedShutterSeconds = newShutterSec;
