@@ -29,6 +29,10 @@ class _MainScreenState extends State<MainScreen> {
   // 計算結果
   double calculatedShutterSeconds = 0.0;
 
+  // 同期状態を管理する変数を追加
+  bool isApertureSyncEnabled = false;
+  bool isISOSyncEnabled = false;
+
   @override
   void initState() {
     super.initState();
@@ -136,8 +140,25 @@ class _MainScreenState extends State<MainScreen> {
                   onChanged: (value) {
                     setState(() {
                       currentApertureKey = _apertureMap.keys.firstWhere((key) => _apertureMap[key] == value);
+                      if (isApertureSyncEnabled) {
+                        newApertureKey = currentApertureKey; // 同期する
+                      }
                     });
                     _calculateExposure();
+                  },
+                ),
+                Switch(
+                  value: isApertureSyncEnabled,
+                  onChanged: (value) {
+                    setState(
+                      () {
+                        isApertureSyncEnabled = value;
+                        if (value) {
+                          newApertureKey = currentApertureKey; // 同期状態で初期化
+                          _calculateExposure();
+                        }
+                      },
+                    );
                   },
                 ),
               ],
@@ -178,8 +199,23 @@ class _MainScreenState extends State<MainScreen> {
                   onChanged: (value) {
                     setState(() {
                       currentISOKey = _isoMap.keys.firstWhere((key) => _isoMap[key] == value);
+                      if (isISOSyncEnabled) {
+                        newISOKey = currentISOKey; // 同期する
+                      }
                     });
                     _calculateExposure();
+                  },
+                ),
+                Switch(
+                  value: isISOSyncEnabled,
+                  onChanged: (value) {
+                    setState(() {
+                      isISOSyncEnabled = value;
+                      if (value) {
+                        newISOKey = currentISOKey; // 同期状態で初期化
+                        _calculateExposure();
+                      }
+                    });
                   },
                 ),
               ],
