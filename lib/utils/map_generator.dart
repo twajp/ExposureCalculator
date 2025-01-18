@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'constants.dart';
+import '../helpers/math_helper.dart';
 
 double calculateShutterSpeed(num step, int n) {
   const num baseShutterSpeed = 1; // 1s 基準
@@ -179,6 +180,18 @@ Map<String, double> generateFullStopISOMap() {
     int n = i - ((i + 1) ~/ 4) - ((i + 2) ~/ 4) - ((i + 3) ~/ 4);
     if (i % 4 == 0) {
       res[thirdAndHalfStopISOList[i]] = calculateISOValue(1 / 1, n - iso100Index);
+    }
+  }
+  return res;
+}
+
+Map<String, double> generateNDFilterMap() {
+  Map<String, double> res = {};
+  for (int i = 0; i < ndFilterList.length; i++) {
+    if (i == 0) {
+      res['No Filter'] = log2(ndFilterList[i] as double);
+    } else {
+      res['ND${ndFilterList[i]}'] = log2(ndFilterList[i] as double);
     }
   }
   return res;

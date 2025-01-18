@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../helpers/math_helper.dart';
 import '../utils/constants.dart';
@@ -16,6 +15,7 @@ class _MainScreenState extends State<MainScreen> {
   late final Map<String, double> _apertureMap;
   late final Map<String, double> _shutterMap;
   late final Map<String, double> _isoMap;
+  late final Map<String, double> _ndFilterMap;
 
   // Current Exposure の宣言と初期値
   String currentApertureKey = '5.6';
@@ -25,7 +25,7 @@ class _MainScreenState extends State<MainScreen> {
   // New Exposure の宣言と初期値
   String newApertureKey = '5.6';
   String newISOKey = '100';
-  String selectedNdFilterKey = 'No ND';
+  String selectedNdFilterKey = 'No Filter';
 
   // 計算結果
   double calculatedShutterSeconds = 0.0;
@@ -40,6 +40,7 @@ class _MainScreenState extends State<MainScreen> {
     _apertureMap = generateThirdStopApertureMap();
     _shutterMap = generateThirdStopShutterMap();
     _isoMap = generateThirdStopISOMap();
+    _ndFilterMap = generateNDFilterMap();
     _calculateExposure();
 
     print('\n===Loaded Maps===');
@@ -65,6 +66,9 @@ class _MainScreenState extends State<MainScreen> {
     print('Half Stops          : ${generateHalfStopISOMap().keys}');
     print('Only Full Stops     : ${generateFullStopISOMap().keys}\n');
 
+    print('===ND Filter===');
+    print('ND Filter: ${_ndFilterMap}\n');
+
     print('===Base Values===');
     print('Aperture: F${_apertureMap.keys.toList()[f1Index]}');
     print('SS      : ${_shutterMap.keys.toList()[ss1Index]}');
@@ -89,7 +93,7 @@ class _MainScreenState extends State<MainScreen> {
     double isoStop = log2(currentISOValue / newISOValue);
 
     // ND フィルターの stop
-    double ndStop = ndFilterMap[selectedNdFilterKey]!;
+    double ndStop = _ndFilterMap[selectedNdFilterKey]!;
 
     // 合計ストップ
     double totalStop = apertureStop + isoStop + ndStop;
@@ -265,7 +269,7 @@ class _MainScreenState extends State<MainScreen> {
                 const Text('ND Filter: '),
                 DropdownButton<String>(
                   value: selectedNdFilterKey,
-                  items: ndFilterMap.keys
+                  items: _ndFilterMap.keys
                       .map((e) => DropdownMenuItem(
                             value: e,
                             child: Text(e),
