@@ -30,79 +30,11 @@ class ExposureCalculatorScreen extends StatefulWidget {
 class _ExposureCalculatorScreenState extends State<ExposureCalculatorScreen> {
   // https://www.scantips.com/lights/fstop2.html
 
-  // 絞り値の選択肢
-  final List<double> _apertureList = [1, 1.1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.5, 2.8, 3.2, 3.5, 4, 4.5, 5, 5.6, 6.3, 7.1, 8, 9, 10, 11, 13, 14, 16];
-
-  // シャッター速度は「1/125」などを String で持ちたいので Map で管理
-  final Map<String, double> _shutterMap = {
-    '1/32000': 1 / 32768, // Full
-    '1/25600': 1 / 26008, // 1/3
-    '1/20000': 1 / 20643, // 2/3
-    '1/16000': 1 / 16384, // Full
-    '1/12800': 1 / 13004, // 1/3
-    '1/10000': 1 / 10321, // 2/3
-    '1/8000': 1 / 8192, // Full
-    '1/6400': 1 / 6502, // 1/3
-    '1/5000': 1 / 5161, // 2/3
-    '1/4000': 1 / 4096, // Full
-    '1/3200': 1 / 3251, // 1/3
-    '1/2500': 1 / 2580, // 2/3
-    '1/2000': 1 / 2048, // Full
-    '1/1600': 1 / 1625, // 1/3
-    '1/1250': 1 / 1290, // 2/3
-    '1/1000': 1 / 1024, // Full
-    '1/800': 1 / 812.7, // 1/3
-    '1/640': 1 / 645.1, // 2/3
-    '1/500': 1 / 512, // Full
-    '1/400': 1 / 406.4, // 1/3
-    '1/320': 1 / 322.5, // 2/3
-    '1/250': 1 / 256, // Full
-    '1/200': 1 / 203.2, // 1/3
-    '1/160': 1 / 161.3, // 2/3
-    '1/125': 1 / 128, // Full
-    '1/100': 1 / 101.6, // 1/3
-    '1/80': 1 / 80.63, // 2/3
-    '1/60': 1 / 64, // Full
-    '1/50': 1 / 50.8, // 1/3
-    '1/40': 1 / 40.32, // 2/3
-    '1/30': 1 / 32, // Full
-    '1/25': 1 / 25.4, // 1/3
-    '1/20': 1 / 20.16, // 2/3
-    '1/15': 1 / 16, // Full
-    '1/13': 1 / 12.7, // 1/3
-    '1/10': 1 / 10.08, // 2/3
-    '1/8': 1 / 8, // Full
-    '1/6': 1 / 6.35, // 1/3
-    '1/5': 1 / 5.04, // 2/3
-    '1/4': 1 / 4, // Full
-    '1/3': 1 / 3.175, // 1/3
-    '1/2.5': 1 / 2.52, // 2/3
-    '1/2': 1 / 2, // Full
-    '1/1.6': 1 / 1.587, // 1/3
-    '1/1.3': 1 / 1.26, // 2/3
-    '1': 1, // Full
-    '1.3': 1.26, // 1/3
-    '1.6': 1.52, // 2/3
-    '2': 2, // Full
-    '2.5': 2.52, // 1/3
-    '3': 3.175, // 2/3
-    '4': 4, // Full
-    '5': 5.04, // 1/3
-    '6': 6.35, // 2/3
-    '8': 8, // Full
-    '10': 10.08, // 1/3
-    '13': 12.7, // 2/3
-    '15': 16, // Full
-    '20': 20.16, // 1/3
-    '25': 25.4, // 2/3
-    '30': 32, // Full
-  };
-
-  // ISO 感度の選択肢
-  final List<int> _isoList = [50, 100, 200, 400, 800, 1600];
-
-  // ND フィルターとそれが何ストップに相当するかを Map で表現
+  final List<String> _apertureList = ['0.5', '0.56', '0.6', '0.7', '0.8', '0.9', '1', '1.1', '1.2', '1.4', '1.6', '1.8', '2', '2.2', '2.5', '2.8', '3.2', '3.5', '4', '4.5', '5.0', '5.6', '6.3', '7.1', '8', '9', '10', '11', '13', '14', '16', '18', '20', '22', '25', '28', '32', '36', '40', '45', '50', '60', '64', '72', '80', '90', '100', '115', '128', '144', '160', '180', '200', '230', '256'];
+  final List<String> _shutterList = ['1/32000', '1/25600', '1/20000', '1/16000', '1/12800', '1/10000', '1/8000', '1/6400', '1/5000', '1/4000', '1/3200', '1/2500', '1/2000', '1/1600', '1/1250', '1/1000', '1/800', '1/640', '1/500', '1/400', '1/320', '1/250', '1/200', '1/160', '1/125', '1/100', '1/80', '1/60', '1/50', '1/40', '1/30', '1/25', '1/20', '1/15', '1/13', '1/10', '1/8', '1/6', '1/5', '1/4', '1/3', '1/2.5', '1/2', '1/1.6', '1/1.3', '1', '1.3', '1.6', '2', '2.5', '3', '4', '5', '6', '8', '10', '13', '15', '20', '25', '30'];
+  final List<String> _isoList = ['3','4','5','6','8','10','12','16','20','25','32','40','50', '64', '80', '100', '125', '160', '200', '250', '320', '400', '500', '640', '800', '1000', '1250', '1600', '2000', '2500', '3200', '4000', '5000', '6400', '8000', '10000', '12800', '16000', '20000', '25600', '32000', '40000', '51200', '64000', '80000', '102400', '128000'];
   final Map<String, double> _ndFilterMap = {
+    // NDフィルターとそれが何段分に相当するかを Map で表現
     'No ND': 0,
     'ND2 (1 stop)': 1,
     'ND4 (2 stops)': 2,
@@ -116,15 +48,21 @@ class _ExposureCalculatorScreenState extends State<ExposureCalculatorScreen> {
     'ND512 (9 stops)': 9,
     'ND1000 (10 stops)': 10,
   };
+  final int f1Index = 6;
+  final int ss1Index = 45;
+  final int iso100Index = 15;
+  late final Map<String, double> _apertureMap;
+  late final Map<String, double> _shutterMap;
+  late final Map<String, double> _isoMap;
 
   // Current Exposure の初期値
-  double _currentAperture = 5.6;
+  String _currentApertureKey = '5.6';
   String _currentShutterKey = '1/125';
-  int _currentISO = 400;
+  String _currentISOKey = '100';
 
   // New Exposure の初期値
-  double _newAperture = 11.0;
-  int _newISO = 100;
+  String _newApertureKey = '5.6';
+  String _newISOKey = '100';
   String _selectedNdFilterKey = 'No ND';
 
   // 計算結果
@@ -133,24 +71,73 @@ class _ExposureCalculatorScreenState extends State<ExposureCalculatorScreen> {
   @override
   void initState() {
     super.initState();
+    _apertureMap = _generateApertureMap();
+    _shutterMap = _generateShutterMap();
+    _isoMap = _generateISOMap();
     _calculateExposure();
+    print(_apertureMap.keys);
+    print(_shutterMap.keys);
+    print(_isoMap.keys);
+    print(_apertureMap.keys.toList()[f1Index]);
+    print(_shutterMap.keys.toList()[ss1Index]);
+    print(_isoMap.keys.toList()[iso100Index]);
+  }
+
+  double calculateShutterSpeed(int n) {
+    const num baseShutterSpeed = 1; // 1s 基準
+    const num step = 1 / 3;
+    num stepRatio = math.pow(2, step); // 1/3段刻みの倍率
+    double res = baseShutterSpeed * math.pow(stepRatio, n) as double;
+    return res;
+  }
+
+  double calculateApertureValue(int n) {
+    const num baseFValue = 1; // f1 基準
+    const num step = 1 / 3;
+    num stepRatio = math.pow(2, step * 1 / 2); // 1/3段刻みの倍率（√2^(1/3)）
+    double res = baseFValue * math.pow(stepRatio, n) as double;
+    return res;
+  }
+
+  double calculateISOValue(int n) {
+    const num baseISOValue = 100; // ISO 100 基準
+    const num step = 1 / 3;
+    num stepRatio = math.pow(2, step); // 1/3段刻みの倍率
+    double res = baseISOValue * math.pow(stepRatio, n) as double;
+    return res;
+  }
+
+  Map<String, double> _generateShutterMap() {
+    return {for (int i = 0; i < _shutterList.length; i++) _shutterList[i]: calculateShutterSpeed(i - ss1Index)};
+  }
+
+  Map<String, double> _generateApertureMap() {
+    return {for (int i = 0; i < _apertureList.length; i++) _apertureList[i]: calculateApertureValue(i - f1Index)};
+  }
+
+  Map<String, double> _generateISOMap() {
+    return {for (int i = 0; i < _isoList.length; i++) _isoList[i]: calculateISOValue(i - iso100Index)};
   }
 
   /// ストップの差分を合計して、新シャッター速度を計算
   void _calculateExposure() {
     // 現在のシャッター速度（秒）
-    double currentShutterSec = _shutterMap[_currentShutterKey] ?? 1.0 / 125.0;
+    double currentShutterSec = _shutterMap[_currentShutterKey]!;
 
     // 絞りのストップ差を計算
     // (Fstop の変化は平方比で考えるが、簡易的に「F5.6 → F11 = +2 stop」などのリスト/テーブル参照でも可)
     // ここでは厳密計算: stop = log2((NewF / OldF)^2)
-    double apertureStop = _log2((_newAperture / _currentAperture) * (_newAperture / _currentAperture));
+    double currentApertureValue = _apertureMap[_currentApertureKey]!;
+    double newApertureValue = _apertureMap[_newApertureKey]!;
+    double apertureStop = _log2((newApertureValue / currentApertureValue) * (newApertureValue / currentApertureValue));
 
     // ISO のストップ差: stop = log2(OldISO / NewISO)
-    double isoStop = _log2(_currentISO / _newISO.toDouble());
+    double currentISOValue = _isoMap[_currentISOKey]!;
+    double newISOValue = _isoMap[_newISOKey]!;
+    double isoStop = _log2(currentISOValue / newISOValue);
 
     // ND フィルターの stop
-    double ndStop = _ndFilterMap[_selectedNdFilterKey] ?? 0.0;
+    double ndStop = _ndFilterMap[_selectedNdFilterKey]!;
 
     // 合計ストップ
     double totalStop = apertureStop + isoStop + ndStop;
@@ -192,16 +179,16 @@ class _ExposureCalculatorScreenState extends State<ExposureCalculatorScreen> {
               children: [
                 const Text('Aperture: '),
                 DropdownButton<double>(
-                  value: _currentAperture,
-                  items: _apertureList
-                      .map((e) => DropdownMenuItem(
-                            value: e,
-                            child: Text('F${e.toString()}'),
-                          ))
-                      .toList(),
+                  value: _apertureMap[_currentApertureKey],
+                  items: _apertureMap.keys.toSet().map((key) {
+                    return DropdownMenuItem<double>(
+                      value: _apertureMap[key],
+                      child: Text('F$key'),
+                    );
+                  }).toList(),
                   onChanged: (value) {
                     setState(() {
-                      _currentAperture = value!;
+                      _currentApertureKey = _apertureMap.keys.firstWhere((key) => _apertureMap[key] == value);
                     });
                     _calculateExposure();
                   },
@@ -212,17 +199,17 @@ class _ExposureCalculatorScreenState extends State<ExposureCalculatorScreen> {
             Row(
               children: [
                 const Text('Shutter: '),
-                DropdownButton<String>(
-                  value: _currentShutterKey,
-                  items: _shutterMap.keys
-                      .map((key) => DropdownMenuItem(
-                            value: key,
-                            child: Text(key),
-                          ))
-                      .toList(),
+                DropdownButton<double>(
+                  value: _shutterMap[_currentShutterKey],
+                  items: _shutterMap.keys.toSet().map((key) {
+                    return DropdownMenuItem<double>(
+                      value: _shutterMap[key],
+                      child: Text(key),
+                    );
+                  }).toList(),
                   onChanged: (value) {
                     setState(() {
-                      _currentShutterKey = value!;
+                      _currentShutterKey = _shutterMap.keys.firstWhere((key) => _shutterMap[key] == value);
                     });
                     _calculateExposure();
                   },
@@ -233,17 +220,17 @@ class _ExposureCalculatorScreenState extends State<ExposureCalculatorScreen> {
             Row(
               children: [
                 const Text('ISO: '),
-                DropdownButton<int>(
-                  value: _currentISO,
-                  items: _isoList
-                      .map((iso) => DropdownMenuItem(
-                            value: iso,
-                            child: Text(iso.toString()),
-                          ))
-                      .toList(),
+                DropdownButton<double>(
+                  value: _isoMap[_currentISOKey],
+                  items: _isoMap.keys.toSet().map((key) {
+                    return DropdownMenuItem<double>(
+                      value: _isoMap[key],
+                      child: Text(key),
+                    );
+                  }).toList(),
                   onChanged: (value) {
                     setState(() {
-                      _currentISO = value!;
+                      _currentISOKey = _isoMap.keys.firstWhere((key) => _isoMap[key] == value);
                     });
                     _calculateExposure();
                   },
@@ -260,16 +247,16 @@ class _ExposureCalculatorScreenState extends State<ExposureCalculatorScreen> {
               children: [
                 const Text('Aperture: '),
                 DropdownButton<double>(
-                  value: _newAperture,
-                  items: _apertureList
-                      .map((e) => DropdownMenuItem(
-                            value: e,
-                            child: Text('F${e.toString()}'),
+                  value: _apertureMap[_newApertureKey],
+                  items: _apertureMap.keys
+                      .map((key) => DropdownMenuItem(
+                            value: _apertureMap[key],
+                            child: Text('F$key'),
                           ))
                       .toList(),
                   onChanged: (value) {
                     setState(() {
-                      _newAperture = value!;
+                      _newApertureKey = _apertureMap.keys.firstWhere((key) => _apertureMap[key] == value);
                     });
                     _calculateExposure();
                   },
@@ -280,17 +267,17 @@ class _ExposureCalculatorScreenState extends State<ExposureCalculatorScreen> {
             Row(
               children: [
                 const Text('ISO: '),
-                DropdownButton<int>(
-                  value: _newISO,
-                  items: _isoList
-                      .map((iso) => DropdownMenuItem(
-                            value: iso,
-                            child: Text(iso.toString()),
+                DropdownButton<double>(
+                  value: _isoMap[_newISOKey],
+                  items: _isoMap.keys
+                      .map((key) => DropdownMenuItem(
+                            value: _isoMap[key],
+                            child: Text(key),
                           ))
                       .toList(),
                   onChanged: (value) {
                     setState(() {
-                      _newISO = value!;
+                      _newISOKey = _isoMap.keys.firstWhere((key) => _isoMap[key] == value);
                     });
                     _calculateExposure();
                   },
@@ -343,7 +330,8 @@ class _ExposureCalculatorScreenState extends State<ExposureCalculatorScreen> {
       int secInt = seconds.round();
       int minutes = secInt ~/ 60;
       int remainSec = secInt % 60;
-      return '${secInt}s (${minutes}m ${remainSec < 10 ? "0$remainSec" : remainSec}s)';
+      // return '${secInt}s (${minutes}m ${remainSec < 10 ? "0$remainSec" : remainSec}s)';
+      return '${seconds.toStringAsFixed(3)}s (${minutes}m ${remainSec < 10 ? "0$remainSec" : remainSec}s)';
     }
   }
 }
