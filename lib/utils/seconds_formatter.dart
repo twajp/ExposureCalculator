@@ -1,8 +1,8 @@
-String findClosestKey(Map<String, double> map, double target) {
-  String closestKey = map.keys.first; // 最初のキーを初期値として使用
-  double smallestDifference = (map[closestKey]! - target).abs();
+String findClosestKey(Map<String, double> shutterMap, double target) {
+  String closestKey = shutterMap.keys.first; // 最初のキーを初期値として使用
+  double smallestDifference = (shutterMap[closestKey]! - target).abs();
 
-  for (var entry in map.entries) {
+  for (var entry in shutterMap.entries) {
     double currentDifference = (entry.value - target).abs();
     if (currentDifference < smallestDifference) {
       closestKey = entry.key;
@@ -14,10 +14,10 @@ String findClosestKey(Map<String, double> map, double target) {
 }
 
 /// 秒数をわかりやすく整形する
-String formatSeconds(Map<String, double> map, double seconds) {
+String formatSeconds(Map<String, double> shutterMap, double seconds) {
   if (seconds < 30) {
     // カメラ内の表示に合わせる
-    return findClosestKey(map, seconds);
+    return findClosestKey(shutterMap, seconds);
   } else if (seconds < 60) {
     // 秒だけ表示
     int secInt = seconds.round();
