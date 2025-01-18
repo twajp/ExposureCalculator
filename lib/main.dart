@@ -13,8 +13,14 @@ class ExposureCalculatorApp extends StatelessWidget {
     return MaterialApp(
       title: 'Exposure Calculator',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        // primarySwatch: Colors.blue,
+        colorSchemeSeed: Colors.blue,
       ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        colorSchemeSeed: Colors.blue,
+      ),
+      debugShowCheckedModeBanner: false,
       home: const MainScreen(),
     );
   }
