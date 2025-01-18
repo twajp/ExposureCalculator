@@ -1,27 +1,26 @@
-import 'dart:math' as map_generator;
+import 'dart:math' as math;
 import 'constants.dart';
 
 double calculateShutterSpeed(num step, int n) {
   const num baseShutterSpeed = 1; // 1s 基準
-  num stepRatio = map_generator.pow(2, step); // 1/3段刻みの倍率
-  double res = baseShutterSpeed * map_generator.pow(stepRatio, n) as double;
+  num stepRatio = math.pow(2, step); // 1/3段刻みの倍率
+  double res = baseShutterSpeed * math.pow(stepRatio, n) as double;
   return res;
 }
 
 double calculateApertureValue(num step, int n) {
   const num baseFValue = 1; // f1 基準
-  num stepRatio = map_generator.pow(2, step * 1 / 2); // 1/3段刻みの倍率（√2^(1/3)）
-  double res = baseFValue * map_generator.pow(stepRatio, n) as double;
+  num stepRatio = math.pow(2, step * 1 / 2); // 1/3段刻みの倍率（√2^(1/3)）
+  double res = baseFValue * math.pow(stepRatio, n) as double;
   return res;
 }
 
 double calculateISOValue(num step, int n) {
   const num baseISOValue = 100; // ISO 100 基準
-  num stepRatio = map_generator.pow(2, step); // 1/3段刻みの倍率
-  double res = baseISOValue * map_generator.pow(stepRatio, n) as double;
+  num stepRatio = math.pow(2, step); // 1/3段刻みの倍率
+  double res = baseISOValue * math.pow(stepRatio, n) as double;
   return res;
 }
-
 
 Map<String, double> generateThirdAndHalfStopApertureMap() {
   Map<String, double> res = {};
