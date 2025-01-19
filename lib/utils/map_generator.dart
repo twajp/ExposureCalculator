@@ -189,12 +189,10 @@ Map<String, double> generateNDFilterMap() {
   Map<String, double> res = {};
   for (int i = 0; i < ndFilterList.length; i++) {
     double stop = log2(ndFilterList[i] as double);
-    // 小数点以下がない場合（整数）は整数部分のみ、それ以外は小数点以下2桁を表示
-    String formattedStops = stop % 1 == 0 ? stop.toInt().toString() : '~${stop.toStringAsFixed(2)}';
     if (i == 0) {
       res['No Filter'] = stop;
     } else {
-      res['ND${ndFilterList[i]} ($formattedStops stops)'] = stop;
+      res['ND${ndFilterList[i]}'] = stop;
     }
   }
   return res;

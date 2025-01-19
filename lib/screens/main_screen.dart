@@ -35,10 +35,18 @@ class _MainScreenState extends State<MainScreen> {
   bool isApertureSyncEnabled = false;
   bool isISOSyncEnabled = false;
 
+  // HorizontalScrollSelector 用の PageController を追加
+  late PageController _currentAperturePageController;
+  late PageController _currentShutterPageController;
+  late PageController _currentISOPageController;
   late PageController _newAperturePageController;
   late PageController _newISOPageController;
   late PageController _ndFilterPageController;
 
+  // HorizontalScrollSelector の選択インデックスを追加
+  late int _selectedCurrentApertureMapIndex;
+  late int _selectedCurrentShutterMapIndex;
+  late int _selectedCurrentISOMapIndex;
   late int _selectedNewApertureMapIndex;
   late int _selectedNewISOMapIndex;
   late int _selectedNDFilterMapIndex;
@@ -52,28 +60,41 @@ class _MainScreenState extends State<MainScreen> {
     _ndFilterMap = generateNDFilterMap();
 
     currentApertureKey = _apertureMap.keys.toList()[defaultCurrentApertureIndex];
-    currentShutterKey = _shutterMap.keys.toList()[defaultCurrentSSIndex];
+    currentShutterKey = _shutterMap.keys.toList()[defaultCurrentShutterIndex];
     currentISOKey = _isoMap.keys.toList()[defaultCurrentISOIndex];
-
     newApertureKey = _apertureMap.keys.toList()[defaultNewApertureIndex];
     newISOKey = _isoMap.keys.toList()[defaultNewISOIndex];
     selectedNdFilterKey = _ndFilterMap.keys.toList()[defaultNDIndex];
 
+    // HorizontalScrollSelector の初期位置を設定
+    _selectedCurrentApertureMapIndex = defaultCurrentApertureIndex;
+    _selectedCurrentShutterMapIndex = defaultCurrentShutterIndex;
+    _selectedCurrentISOMapIndex = defaultCurrentISOIndex;
     _selectedNewApertureMapIndex = defaultNewApertureIndex;
     _selectedNewISOMapIndex = defaultNewISOIndex;
     _selectedNDFilterMapIndex = defaultNDIndex;
 
     // 初期インデックスを設定して PageController を初期化
+    _currentAperturePageController = PageController(
+      viewportFraction: 0.3,
+      initialPage: _selectedCurrentApertureMapIndex, // Current Aperture の初期インデックス
+    );
+    _currentShutterPageController = PageController(
+      viewportFraction: 0.3,
+      initialPage: _selectedCurrentShutterMapIndex, // Current Shutter の初期インデックス
+    );
+    _currentISOPageController = PageController(
+      viewportFraction: 0.3,
+      initialPage: _selectedCurrentISOMapIndex, // Current ISO の初期インデックス
+    );
     _newAperturePageController = PageController(
       viewportFraction: 0.3,
-      initialPage: _selectedNewApertureMapIndex, // ISO の初期インデックス
+      initialPage: _selectedNewApertureMapIndex, // New Aperture の初期インデックス
     );
-
     _newISOPageController = PageController(
       viewportFraction: 0.3,
-      initialPage: _selectedNewISOMapIndex, // ISO の初期インデックス
+      initialPage: _selectedNewISOMapIndex, // New ISO の初期インデックス
     );
-
     _ndFilterPageController = PageController(
       viewportFraction: 0.3,
       initialPage: _selectedNDFilterMapIndex, // ND フィルターの初期インデックス
@@ -114,7 +135,7 @@ class _MainScreenState extends State<MainScreen> {
 
     print('===Default Values===');
     print('Current Aperture: F${_apertureMap.keys.toList()[defaultCurrentApertureIndex]}');
-    print('Current SS      : ${_shutterMap.keys.toList()[defaultCurrentSSIndex]}');
+    print('Current Shutter : ${_shutterMap.keys.toList()[defaultCurrentShutterIndex]}');
     print('Current ISO     : ${_isoMap.keys.toList()[defaultCurrentISOIndex]}');
     print('New Aperture    : F${_apertureMap.keys.toList()[defaultNewApertureIndex]}');
     print('New ISO         : ${_isoMap.keys.toList()[defaultNewISOIndex]}');
@@ -160,108 +181,94 @@ class _MainScreenState extends State<MainScreen> {
       ),
       body: SafeArea(
         child: Column(
+          // Current と New Exposure 全体
           children: [
             Spacer(),
             const Text(
               'Current Exposure',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text('Aperture: '),
-                      SizedBox(height: 28),
-                      const Text('Shutter Speed: '),
-                      SizedBox(height: 28),
-                      const Text('ISO: '),
-                    ],
+            Container(
+              margin: EdgeInsets.only(left: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    // 3つの HorizontalScrollSelector が左に寄るように Expanded で囲む
+                    child: Column(
+                      children: [
+                        HorizontalScrollSelector(
+                          pageController: _currentAperturePageController,
+                          map: _apertureMap,
+                          selectedIndex: _selectedCurrentApertureMapIndex,
+                          title: 'Aperture',
+                          onPageChanged: (index) {
+                            setState(() {
+                              _selectedCurrentApertureMapIndex = index;
+                              currentApertureKey = _apertureMap.keys.toList()[index];
+                            });
+                            _calculateExposure();
+                          },
+                        ),
+                        SizedBox(height: 16),
+                        HorizontalScrollSelector(
+                          pageController: _currentShutterPageController,
+                          map: _shutterMap,
+                          selectedIndex: _selectedCurrentShutterMapIndex,
+                          title: 'Shutter',
+                          onPageChanged: (index) {
+                            setState(() {
+                              _selectedCurrentShutterMapIndex = index;
+                              currentShutterKey = _shutterMap.keys.toList()[index];
+                            });
+                            _calculateExposure();
+                          },
+                        ),
+                        SizedBox(height: 16),
+                        HorizontalScrollSelector(
+                          pageController: _currentISOPageController,
+                          map: _isoMap,
+                          selectedIndex: _selectedCurrentISOMapIndex,
+                          title: 'ISO',
+                          onPageChanged: (index) {
+                            setState(() {
+                              _selectedCurrentISOMapIndex = index;
+                              currentISOKey = _isoMap.keys.toList()[index];
+                            });
+                            _calculateExposure();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DropdownButton<double>(
-                      value: _apertureMap[currentApertureKey],
-                      items: _apertureMap.keys
-                          .map((key) => DropdownMenuItem(
-                                value: _apertureMap[key],
-                                child: Text('F$key'),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          currentApertureKey = _apertureMap.keys.firstWhere((key) => _apertureMap[key] == value);
-                          if (isApertureSyncEnabled) {
-                            newApertureKey = currentApertureKey; // 同期する
-                          }
-                        });
-                        _calculateExposure();
-                      },
-                    ),
-                    DropdownButton<double>(
-                      value: _shutterMap[currentShutterKey],
-                      items: _shutterMap.keys
-                          .map((key) => DropdownMenuItem(
-                                value: _shutterMap[key],
-                                child: Text(key),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          currentShutterKey = _shutterMap.keys.firstWhere((key) => _shutterMap[key] == value);
-                        });
-                        _calculateExposure();
-                      },
-                    ),
-                    DropdownButton<double>(
-                      value: _isoMap[currentISOKey],
-                      items: _isoMap.keys
-                          .map((key) => DropdownMenuItem(
-                                value: _isoMap[key],
-                                child: Text(key),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          currentISOKey = _isoMap.keys.firstWhere((key) => _isoMap[key] == value);
-                          if (isISOSyncEnabled) {
-                            newISOKey = currentISOKey; // 同期する
-                          }
-                        });
-                        _calculateExposure();
-                      },
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Switch(
-                        value: isApertureSyncEnabled,
-                        onChanged: (value) {
-                          setState(
-                            () {
-                              isApertureSyncEnabled = value;
-                              if (value) {
-                                newApertureKey = currentApertureKey; // 同期状態で初期化
-                                _calculateExposure();
-                              }
-                            },
-                          );
+                      const SizedBox(height: 26),
+                      IconButton(
+                        icon: Icon(
+                          isApertureSyncEnabled ? Icons.sync : Icons.sync_disabled,
+                          color: isApertureSyncEnabled ? Colors.blue : Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isApertureSyncEnabled = !isApertureSyncEnabled; // 状態をトグル
+                            if (isApertureSyncEnabled) {
+                              newApertureKey = currentApertureKey; // 同期状態で初期化
+                              _calculateExposure();
+                            }
+                          });
                         },
                       ),
-                      const SizedBox(height: 52),
-                      Switch(
-                        value: isISOSyncEnabled,
-                        onChanged: (value) {
+                      const SizedBox(height: 98),
+                      IconButton(
+                        icon: Icon(
+                          isISOSyncEnabled ? Icons.sync : Icons.sync_disabled,
+                          color: isISOSyncEnabled ? Colors.blue : Colors.grey,
+                        ),
+                        onPressed: () {
                           setState(() {
-                            isISOSyncEnabled = value;
-                            if (value) {
+                            isISOSyncEnabled = !isISOSyncEnabled; // 状態をトグル
+                            if (isISOSyncEnabled) {
                               newISOKey = currentISOKey; // 同期状態で初期化
                               _calculateExposure();
                             }
@@ -270,8 +277,8 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const Spacer(),
             const Text(
@@ -280,48 +287,60 @@ class _MainScreenState extends State<MainScreen> {
             ),
             Container(
               margin: EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
+              child: Row(
                 children: [
-                  HorizontalScrollSelector(
-                    pageController: _newAperturePageController,
-                    map: _apertureMap,
-                    selectedIndex: _selectedNewApertureMapIndex,
-                    title: 'Aperture',
-                    onPageChanged: (index) {
-                      setState(() {
-                        _selectedNewApertureMapIndex = index;
-                        newApertureKey = _apertureMap.keys.toList()[index];
-                      });
-                      _calculateExposure();
-                    },
+                  Expanded(
+                    // 3つの HorizontalScrollSelector が左に寄るように Expanded で囲む
+                    child: Column(
+                      children: [
+                        HorizontalScrollSelector(
+                          pageController: _newAperturePageController,
+                          map: _apertureMap,
+                          selectedIndex: _selectedNewApertureMapIndex,
+                          title: 'Aperture',
+                          onPageChanged: (index) {
+                            setState(() {
+                              _selectedNewApertureMapIndex = index;
+                              newApertureKey = _apertureMap.keys.toList()[index];
+                            });
+                            _calculateExposure();
+                          },
+                        ),
+                        SizedBox(height: 16),
+                        HorizontalScrollSelector(
+                          pageController: _newISOPageController,
+                          map: _isoMap,
+                          selectedIndex: _selectedNewISOMapIndex,
+                          title: 'ISO',
+                          onPageChanged: (index) {
+                            setState(() {
+                              _selectedNewISOMapIndex = index;
+                              newISOKey = _isoMap.keys.toList()[index];
+                            });
+                            _calculateExposure();
+                          },
+                        ),
+                        SizedBox(height: 16),
+                        HorizontalScrollSelector(
+                          pageController: _ndFilterPageController,
+                          map: _ndFilterMap,
+                          selectedIndex: _selectedNDFilterMapIndex,
+                          title: 'ND Filter',
+                          onPageChanged: (index) {
+                            setState(() {
+                              _selectedNDFilterMapIndex = index;
+                              selectedNdFilterKey = _ndFilterMap.keys.toList()[index];
+                            });
+                            _calculateExposure();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 16),
-                  HorizontalScrollSelector(
-                    pageController: _newISOPageController,
-                    map: _isoMap,
-                    selectedIndex: _selectedNewISOMapIndex,
-                    title: 'ISO',
-                    onPageChanged: (index) {
-                      setState(() {
-                        _selectedNewISOMapIndex = index;
-                        newISOKey = _isoMap.keys.toList()[index];
-                      });
-                      _calculateExposure();
-                    },
-                  ),
-                  SizedBox(height: 16),
-                  HorizontalScrollSelector(
-                    pageController: _ndFilterPageController,
-                    map: _ndFilterMap,
-                    selectedIndex: _selectedNDFilterMapIndex,
-                    title: 'ND Filter',
-                    onPageChanged: (index) {
-                      setState(() {
-                        _selectedNDFilterMapIndex = index;
-                        selectedNdFilterKey = _ndFilterMap.keys.toList()[index];
-                      });
-                      _calculateExposure();
-                    },
+                  Column(
+                    children: [
+                      SizedBox(width: 32),
+                    ],
                   ),
                 ],
               ),

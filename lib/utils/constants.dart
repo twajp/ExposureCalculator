@@ -28,7 +28,7 @@ const int ss1Index = 45; // 1s
 const int iso100Index = 21; // ISO100
 
 const int defaultCurrentApertureIndex = f1Index + 3 * 5; // F5.6
-const int defaultCurrentSSIndex = ss1Index - 3 * 7; // 1/125s
+const int defaultCurrentShutterIndex = ss1Index - 3 * 7; // 1/125s
 const int defaultCurrentISOIndex = iso100Index + 3 * 2; // ISO400
 
 const int defaultNewApertureIndex = f1Index + 3 * 5; // F5.6
