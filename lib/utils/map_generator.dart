@@ -190,7 +190,7 @@ Map<String, double> generateNDFilterMap() {
   for (int i = 0; i < ndFilterList.length; i++) {
     double stop = log2(ndFilterList[i] as double);
     if (i == 0) {
-      res['No Filter'] = stop;
+      res['None'] = stop;
     } else {
       res['ND${ndFilterList[i]}'] = stop;
     }
