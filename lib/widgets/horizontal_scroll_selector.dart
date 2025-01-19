@@ -16,29 +16,41 @@ class HorizontalScrollSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final items = map.keys.toList();
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SizedBox(
-          height: 36,
+          height: 40,
           child: PageView.builder(
             controller: pageController,
             scrollDirection: Axis.horizontal,
-            itemCount: map.keys.toList().length,
+            itemCount: items.length,
             onPageChanged: onPageChanged,
             itemBuilder: (context, index) {
               final isSelected = index == selectedIndex;
-              return AnimatedContainer(
-                duration: Duration(milliseconds: 300),
-                decoration: BoxDecoration(
-                  color: isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
-                child: Center(
+              return GestureDetector(
+                onTap: () {
+                  pageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.symmetric(horizontal: 5), // 項目間のスペース
+                  decoration: BoxDecoration(
+                    color: isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.onPrimaryContainer,
+                    // color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(8), // 角を丸める
+                  ),
+                  alignment: Alignment.center,
                   child: Text(
-                    map.keys.toList()[index],
+                    items[index],
                     style: TextStyle(
                       fontSize: 16,
-                      color: isSelected ? Colors.white : Colors.black,
+                      color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.surface,
                     ),
                   ),
                 ),
