@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../helpers/math_helper.dart';
 import '../utils/constants.dart';
 import '../utils/map_generator.dart';
@@ -51,6 +52,10 @@ class _MainScreenState extends State<MainScreen> {
   late int _selectedNewISOMapIndex;
   late int _selectedNDFilterMapIndex;
 
+  // 無限ループ防止のためのフラグ
+  bool _isUpdatingCurrentFromNew = false;
+  bool _isUpdatingNewFromCurrent = false;
+
   @override
   void initState() {
     super.initState();
@@ -102,44 +107,40 @@ class _MainScreenState extends State<MainScreen> {
 
     _calculateExposure();
 
-    print('\n===Loaded Maps===');
-    print('Aperture      : ${_apertureMap.keys}');
-    print('Shutter Speeds: ${_shutterMap.keys}');
-    print('ISO           : ${_isoMap.keys}\n');
-
-    print('===Aperture===');
-    print('Third and Half Stops: ${generateThirdAndHalfStopApertureMap().keys}');
-    print('Third Stops         : ${generateThirdStopApertureMap().keys}');
-    print('Half Stops          : ${generateHalfStopApertureMap().keys}');
-    print('Only Full Stops     : ${generateFullStopApertureMap().keys}\n');
-
-    print('===Shutter Speeds===');
-    print('Third and Half Stops: ${generateThirdAndHalfStopShutterMap().keys}');
-    print('Third Stops         : ${generateThirdStopShutterMap().keys}');
-    print('Half Stops          : ${generateHalfStopShutterMap().keys}');
-    print('Only Full Stops     : ${generateFullStopShutterMap().keys}\n');
-
-    print('===ISO===');
-    print('Third and Half Stops: ${generateThirdAndHalfStopISOMap().keys}');
-    print('Third Stops         : ${generateThirdStopISOMap().keys}');
-    print('Half Stops          : ${generateHalfStopISOMap().keys}');
-    print('Only Full Stops     : ${generateFullStopISOMap().keys}\n');
-
-    print('===ND Filter===');
-    print('ND Filter: $_ndFilterMap\n');
-
-    print('===Base Values===');
-    print('Aperture: F${_apertureMap.keys.toList()[f1Index]}');
-    print('SS      : ${_shutterMap.keys.toList()[ss1Index]}');
-    print('ISO     : ${_isoMap.keys.toList()[iso100Index]}\n');
-
-    print('===Default Values===');
-    print('Current Aperture: F${_apertureMap.keys.toList()[defaultCurrentApertureIndex]}');
-    print('Current Shutter : ${_shutterMap.keys.toList()[defaultCurrentShutterIndex]}');
-    print('Current ISO     : ${_isoMap.keys.toList()[defaultCurrentISOIndex]}');
-    print('New Aperture    : F${_apertureMap.keys.toList()[defaultNewApertureIndex]}');
-    print('New ISO         : ${_isoMap.keys.toList()[defaultNewISOIndex]}');
-    print('ND Filter       : ${_ndFilterMap.keys.toList()[defaultNDIndex]}');
+    if (kDebugMode) {
+      print('\n===Loaded Maps===\n'
+          'Aperture            : ${_apertureMap.keys}\n'
+          'Shutter Speeds      : ${_shutterMap.keys}\n'
+          'ISO                 : ${_isoMap.keys}\n\n'
+          '===Aperture===\n'
+          'Third and Half Stops: ${generateThirdAndHalfStopApertureMap().keys}\n'
+          'Third Stops         : ${generateThirdStopApertureMap().keys}\n'
+          'Half Stops          : ${generateHalfStopApertureMap().keys}\n'
+          'Only Full Stops     : ${generateFullStopApertureMap().keys}\n\n'
+          '===Shutter Speeds===\n'
+          'Third and Half Stops: ${generateThirdAndHalfStopShutterMap().keys}\n'
+          'Third Stops         : ${generateThirdStopShutterMap().keys}\n'
+          'Half Stops          : ${generateHalfStopShutterMap().keys}\n'
+          'Only Full Stops     : ${generateFullStopShutterMap().keys}\n\n'
+          '===ISO===\n'
+          'Third and Half Stops: ${generateThirdAndHalfStopISOMap().keys}\n'
+          'Third Stops         : ${generateThirdStopISOMap().keys}\n'
+          'Half Stops          : ${generateHalfStopISOMap().keys}\n'
+          'Only Full Stops     : ${generateFullStopISOMap().keys}\n\n'
+          '===ND Filter===\n'
+          'ND Filter           : $_ndFilterMap\n\n'
+          '===Base Values===\n'
+          'Aperture            : F${_apertureMap.keys.toList()[f1Index]}\n'
+          'SS                  : ${_shutterMap.keys.toList()[ss1Index]}\n'
+          'ISO                 : ${_isoMap.keys.toList()[iso100Index]}\n\n'
+          '===Default Values===\n'
+          'Current Aperture    : F${_apertureMap.keys.toList()[defaultCurrentApertureIndex]}\n'
+          'Current Shutter     : ${_shutterMap.keys.toList()[defaultCurrentShutterIndex]}\n'
+          'Current ISO         : ${_isoMap.keys.toList()[defaultCurrentISOIndex]}\n'
+          'New Aperture        : F${_apertureMap.keys.toList()[defaultNewApertureIndex]}\n'
+          'New ISO             : ${_isoMap.keys.toList()[defaultNewISOIndex]}\n'
+          'ND Filter           : ${_ndFilterMap.keys.toList()[defaultNDIndex]}\n');
+    }
   }
 
   /// ストップの差分を合計して、新シャッター速度を計算
@@ -174,6 +175,17 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   @override
+  void dispose() {
+    _currentAperturePageController.dispose();
+    _currentShutterPageController.dispose();
+    _currentISOPageController.dispose();
+    _newAperturePageController.dispose();
+    _newISOPageController.dispose();
+    _ndFilterPageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -202,9 +214,17 @@ class _MainScreenState extends State<MainScreen> {
                           selectedIndex: _selectedCurrentApertureMapIndex,
                           title: 'Aperture',
                           onPageChanged: (index) {
+                            if (_isUpdatingCurrentFromNew) return;
                             setState(() {
+                              _isUpdatingNewFromCurrent = true;
                               _selectedCurrentApertureMapIndex = index;
                               currentApertureKey = _apertureMap.keys.toList()[index];
+                              if (isApertureSyncEnabled) {
+                                newApertureKey = currentApertureKey;
+                                _selectedNewApertureMapIndex = index;
+                                _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex);
+                              }
+                              _isUpdatingNewFromCurrent = false;
                             });
                             _calculateExposure();
                           },
@@ -230,9 +250,17 @@ class _MainScreenState extends State<MainScreen> {
                           selectedIndex: _selectedCurrentISOMapIndex,
                           title: 'ISO',
                           onPageChanged: (index) {
+                            if (_isUpdatingCurrentFromNew) return;
                             setState(() {
+                              _isUpdatingNewFromCurrent = true;
                               _selectedCurrentISOMapIndex = index;
                               currentISOKey = _isoMap.keys.toList()[index];
+                              if (isISOSyncEnabled) {
+                                newISOKey = currentISOKey;
+                                _selectedNewISOMapIndex = index;
+                                _newISOPageController.jumpToPage(_selectedNewISOMapIndex);
+                              }
+                              _isUpdatingNewFromCurrent = false;
                             });
                             _calculateExposure();
                           },
@@ -254,6 +282,8 @@ class _MainScreenState extends State<MainScreen> {
                             isApertureSyncEnabled = !isApertureSyncEnabled; // 状態をトグル
                             if (isApertureSyncEnabled) {
                               newApertureKey = currentApertureKey; // 同期状態で初期化
+                              _selectedNewApertureMapIndex = _selectedCurrentApertureMapIndex; // 選択インデックスを同期
+                              _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex); // PageController を同期
                               _calculateExposure();
                             }
                           });
@@ -270,6 +300,8 @@ class _MainScreenState extends State<MainScreen> {
                             isISOSyncEnabled = !isISOSyncEnabled; // 状態をトグル
                             if (isISOSyncEnabled) {
                               newISOKey = currentISOKey; // 同期状態で初期化
+                              _selectedNewISOMapIndex = _selectedCurrentISOMapIndex; // 選択インデックスを同期
+                              _newISOPageController.jumpToPage(_selectedNewISOMapIndex); // PageController を同期
                               _calculateExposure();
                             }
                           });
@@ -299,9 +331,17 @@ class _MainScreenState extends State<MainScreen> {
                           selectedIndex: _selectedNewApertureMapIndex,
                           title: 'Aperture',
                           onPageChanged: (index) {
+                            if (_isUpdatingNewFromCurrent) return;
                             setState(() {
+                              _isUpdatingCurrentFromNew = true;
                               _selectedNewApertureMapIndex = index;
                               newApertureKey = _apertureMap.keys.toList()[index];
+                              if (isApertureSyncEnabled) {
+                                currentApertureKey = newApertureKey;
+                                _selectedCurrentApertureMapIndex = index;
+                                _currentAperturePageController.jumpToPage(_selectedCurrentApertureMapIndex);
+                              }
+                              _isUpdatingCurrentFromNew = false;
                             });
                             _calculateExposure();
                           },
@@ -313,9 +353,17 @@ class _MainScreenState extends State<MainScreen> {
                           selectedIndex: _selectedNewISOMapIndex,
                           title: 'ISO',
                           onPageChanged: (index) {
+                            if (_isUpdatingNewFromCurrent) return;
                             setState(() {
+                              _isUpdatingCurrentFromNew = true;
                               _selectedNewISOMapIndex = index;
                               newISOKey = _isoMap.keys.toList()[index];
+                              if (isISOSyncEnabled) {
+                                currentISOKey = newISOKey;
+                                _selectedCurrentISOMapIndex = index;
+                                _currentISOPageController.jumpToPage(_selectedCurrentISOMapIndex);
+                              }
+                              _isUpdatingCurrentFromNew = false;
                             });
                             _calculateExposure();
                           },
