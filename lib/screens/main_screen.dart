@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../helpers/math_helper.dart';
 import '../utils/constants.dart';
 import '../utils/map_generator.dart';
-import '../utils/seconds_formatter.dart';
-import '../widgets/horizontal_scroll_selector.dart';
+import '../widgets/exposure_row.dart';
+import '../widgets/exposure_result.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -192,296 +192,218 @@ class _MainScreenState extends State<MainScreen> {
         title: const Text('Exposure Calculator'),
       ),
       body: SafeArea(
-        child: Column(
-          // Current と New Exposure 全体
-          children: [
-            Spacer(),
-            const Text(
-              'Current Exposure',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                spacing: 4,
-                children: [
-                  // Current Aperture
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Aperture',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ), // Title
-                  Row(
-                    children: [
-                      Expanded(
-                        child: HorizontalScrollSelector(
-                          pageController: _currentAperturePageController,
-                          map: _apertureMap,
-                          selectedIndex: _selectedCurrentApertureMapIndex,
-                          onPageChanged: (index) {
-                            if (_isUpdatingCurrentFromNew) return;
-                            setState(() {
-                              _isUpdatingNewFromCurrent = true;
-                              _selectedCurrentApertureMapIndex = index;
-                              currentApertureKey = _apertureMap.keys.toList()[index];
-                              if (isApertureSyncEnabled) {
-                                newApertureKey = currentApertureKey;
-                                _selectedNewApertureMapIndex = index;
-                                _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex);
-                              }
-                              _isUpdatingNewFromCurrent = false;
-                            });
-                            _calculateExposure();
-                          },
-                        ),
-                      ),
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: IconButton(
-                          padding: EdgeInsets.only(left: 8),
-                          icon: Icon(
-                            size: 24,
-                            isApertureSyncEnabled ? Icons.sync : Icons.sync_disabled,
-                            color: isApertureSyncEnabled ? Colors.blue : Colors.grey,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              isApertureSyncEnabled = !isApertureSyncEnabled; // 状態をトグル
-                              if (isApertureSyncEnabled) {
-                                newApertureKey = currentApertureKey; // 同期状態で初期化
-                                _selectedNewApertureMapIndex = _selectedCurrentApertureMapIndex; // 選択インデックスを同期
-                                _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex); // PageController を同期
-                                _calculateExposure();
-                              }
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  ), // HorizontalScrollSelector と同期ボタン
-                  SizedBox(height: 12),
-                  // Current Shutter Seconds
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Shutter',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ), // Title
-                  Row(
-                    children: [
-                      Expanded(
-                        child: HorizontalScrollSelector(
-                          pageController: _currentShutterPageController,
-                          map: _shutterMap,
-                          selectedIndex: _selectedCurrentShutterMapIndex,
-                          onPageChanged: (index) {
-                            setState(() {
-                              _selectedCurrentShutterMapIndex = index;
-                              currentShutterKey = _shutterMap.keys.toList()[index];
-                            });
-                            _calculateExposure();
-                          },
-                        ),
-                      ),
-                      SizedBox(width: 24, height: 24),
-                    ],
-                  ), // HorizontalScrollSelector とSizedBox
-                  SizedBox(height: 12),
-                  // Current ISO
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ISO',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ), // Title
-                  Row(
-                    children: [
-                      Expanded(
-                        child: HorizontalScrollSelector(
-                          pageController: _currentISOPageController,
-                          map: _isoMap,
-                          selectedIndex: _selectedCurrentISOMapIndex,
-                          onPageChanged: (index) {
-                            if (_isUpdatingCurrentFromNew) return;
-                            setState(() {
-                              _isUpdatingNewFromCurrent = true;
-                              _selectedCurrentISOMapIndex = index;
-                              currentISOKey = _isoMap.keys.toList()[index];
-                              if (isISOSyncEnabled) {
-                                newISOKey = currentISOKey;
-                                _selectedNewISOMapIndex = index;
-                                _newISOPageController.jumpToPage(_selectedNewISOMapIndex);
-                              }
-                              _isUpdatingNewFromCurrent = false;
-                            });
-                            _calculateExposure();
-                          },
-                        ),
-                      ),
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: IconButton(
-                          padding: EdgeInsets.only(left: 8),
-                          icon: Icon(
-                            isISOSyncEnabled ? Icons.sync : Icons.sync_disabled,
-                            color: isISOSyncEnabled ? Colors.blue : Colors.grey,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              isISOSyncEnabled = !isISOSyncEnabled; // 状態をトグル
-                              if (isISOSyncEnabled) {
-                                newISOKey = currentISOKey; // 同期状態で初期化
-                                _selectedNewISOMapIndex = _selectedCurrentISOMapIndex; // 選択インデックスを同期
-                                _newISOPageController.jumpToPage(_selectedNewISOMapIndex); // PageController を同期
-                                _calculateExposure();
-                              }
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  ), // HorizontalScrollSelector と同期ボタン
-                ],
+        child: Expanded(
+          child: Column(
+            children: [
+              Spacer(),
+              // Current Exposure セクション
+              const Text(
+                'Current Exposure',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-            ),
-            const Spacer(),
-            const Text(
-              'New Exposure',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                spacing: 4,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Aperture',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: HorizontalScrollSelector(
-                          pageController: _newAperturePageController,
-                          map: _apertureMap,
-                          selectedIndex: _selectedNewApertureMapIndex,
-                          onPageChanged: (index) {
-                            if (_isUpdatingNewFromCurrent) return;
-                            setState(() {
-                              _isUpdatingCurrentFromNew = true;
-                              _selectedNewApertureMapIndex = index;
-                              newApertureKey = _apertureMap.keys.toList()[index];
-                              if (isApertureSyncEnabled) {
-                                currentApertureKey = newApertureKey;
-                                _selectedCurrentApertureMapIndex = index;
-                                _currentAperturePageController.jumpToPage(_selectedCurrentApertureMapIndex);
-                              }
-                              _isUpdatingCurrentFromNew = false;
-                            });
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    ExposureRow(
+                      label: 'Aperture',
+                      pageController: _currentAperturePageController,
+                      map: _apertureMap,
+                      selectedIndex: _selectedCurrentApertureMapIndex,
+                      onPageChanged: (index) {
+                        if (_isUpdatingCurrentFromNew) return;
+                        setState(() {
+                          _isUpdatingNewFromCurrent = true;
+                          _selectedCurrentApertureMapIndex = index;
+                          currentApertureKey = _apertureMap.keys.toList()[index];
+                          if (isApertureSyncEnabled) {
+                            newApertureKey = currentApertureKey;
+                            _selectedNewApertureMapIndex = index;
+                            _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex);
+                          }
+                          _isUpdatingNewFromCurrent = false;
+                        });
+                        _calculateExposure();
+                      },
+                      showSyncButton: true,
+                      isSyncEnabled: isApertureSyncEnabled,
+                      onSyncToggle: () {
+                        setState(() {
+                          isApertureSyncEnabled = !isApertureSyncEnabled;
+                          if (isApertureSyncEnabled) {
+                            newApertureKey = currentApertureKey;
+                            _selectedNewApertureMapIndex = _selectedCurrentApertureMapIndex;
+                            _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex);
                             _calculateExposure();
-                          },
-                        ),
-                      ),
-                      SizedBox(width: 24, height: 24),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ISO',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: HorizontalScrollSelector(
-                          pageController: _newISOPageController,
-                          map: _isoMap,
-                          selectedIndex: _selectedNewISOMapIndex,
-                          onPageChanged: (index) {
-                            if (_isUpdatingNewFromCurrent) return;
-                            setState(() {
-                              _isUpdatingCurrentFromNew = true;
-                              _selectedNewISOMapIndex = index;
-                              newISOKey = _isoMap.keys.toList()[index];
-                              if (isISOSyncEnabled) {
-                                currentISOKey = newISOKey;
-                                _selectedCurrentISOMapIndex = index;
-                                _currentISOPageController.jumpToPage(_selectedCurrentISOMapIndex);
-                              }
-                              _isUpdatingCurrentFromNew = false;
-                            });
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    ExposureRow(
+                      label: 'Shutter',
+                      pageController: _currentShutterPageController,
+                      map: _shutterMap,
+                      selectedIndex: _selectedCurrentShutterMapIndex,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _selectedCurrentShutterMapIndex = index;
+                          currentShutterKey = _shutterMap.keys.toList()[index];
+                        });
+                        _calculateExposure();
+                      },
+                      showSyncButton: false,
+                    ),
+                    const SizedBox(height: 12),
+                    ExposureRow(
+                      label: 'ISO',
+                      pageController: _currentISOPageController,
+                      map: _isoMap,
+                      selectedIndex: _selectedCurrentISOMapIndex,
+                      onPageChanged: (index) {
+                        if (_isUpdatingCurrentFromNew) return;
+                        setState(() {
+                          _isUpdatingNewFromCurrent = true;
+                          _selectedCurrentISOMapIndex = index;
+                          currentISOKey = _isoMap.keys.toList()[index];
+                          if (isISOSyncEnabled) {
+                            newISOKey = currentISOKey;
+                            _selectedNewISOMapIndex = index;
+                            _newISOPageController.jumpToPage(_selectedNewISOMapIndex);
+                          }
+                          _isUpdatingNewFromCurrent = false;
+                        });
+                        _calculateExposure();
+                      },
+                      showSyncButton: true,
+                      isSyncEnabled: isISOSyncEnabled,
+                      onSyncToggle: () {
+                        setState(() {
+                          isISOSyncEnabled = !isISOSyncEnabled;
+                          if (isISOSyncEnabled) {
+                            newISOKey = currentISOKey;
+                            _selectedNewISOMapIndex = _selectedCurrentISOMapIndex;
+                            _newISOPageController.jumpToPage(_selectedNewISOMapIndex);
                             _calculateExposure();
-                          },
-                        ),
-                      ),
-                      SizedBox(width: 24, height: 24),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ND Filter',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: HorizontalScrollSelector(
-                          pageController: _ndFilterPageController,
-                          map: _ndFilterMap,
-                          selectedIndex: _selectedNDFilterMapIndex,
-                          onPageChanged: (index) {
-                            setState(() {
-                              _selectedNDFilterMapIndex = index;
-                              selectedNdFilterKey = _ndFilterMap.keys.toList()[index];
-                            });
-                            _calculateExposure();
-                          },
-                        ),
-                      ),
-                      SizedBox(width: 24, height: 24),
-                    ],
-                  ),
-                ],
+                          }
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Spacer(),
-            // 結果表示
-            Text(
-              'Shutter Speed: ${formatSeconds(_shutterMap, calculatedShutterSeconds)}',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+              Spacer(),
+              // New Exposure セクション
+              const Text(
+                'New Exposure',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-            ),
-            const Spacer(),
-          ],
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    ExposureRow(
+                      label: 'Aperture',
+                      pageController: _newAperturePageController,
+                      map: _apertureMap,
+                      selectedIndex: _selectedNewApertureMapIndex,
+                      onPageChanged: (index) {
+                        if (_isUpdatingNewFromCurrent) return;
+                        setState(() {
+                          _isUpdatingCurrentFromNew = true;
+                          _selectedNewApertureMapIndex = index;
+                          newApertureKey = _apertureMap.keys.toList()[index];
+                          if (isApertureSyncEnabled) {
+                            currentApertureKey = newApertureKey;
+                            _selectedCurrentApertureMapIndex = index;
+                            _currentAperturePageController.jumpToPage(_selectedCurrentApertureMapIndex);
+                          }
+                          _isUpdatingCurrentFromNew = false;
+                        });
+                        _calculateExposure();
+                      },
+                      showSyncButton: true,
+                      isSyncEnabled: isApertureSyncEnabled,
+                      onSyncToggle: () {
+                        setState(() {
+                          isApertureSyncEnabled = !isApertureSyncEnabled;
+                          if (isApertureSyncEnabled) {
+                            currentApertureKey = newApertureKey;
+                            _selectedCurrentApertureMapIndex = _selectedNewApertureMapIndex;
+                            _currentAperturePageController.jumpToPage(_selectedCurrentApertureMapIndex);
+                            _calculateExposure();
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    ExposureRow(
+                      label: 'ISO',
+                      pageController: _newISOPageController,
+                      map: _isoMap,
+                      selectedIndex: _selectedNewISOMapIndex,
+                      onPageChanged: (index) {
+                        if (_isUpdatingNewFromCurrent) return;
+                        setState(() {
+                          _isUpdatingCurrentFromNew = true;
+                          _selectedNewISOMapIndex = index;
+                          newISOKey = _isoMap.keys.toList()[index];
+                          if (isISOSyncEnabled) {
+                            currentISOKey = newISOKey;
+                            _selectedCurrentISOMapIndex = index;
+                            _currentISOPageController.jumpToPage(_selectedCurrentISOMapIndex);
+                          }
+                          _isUpdatingCurrentFromNew = false;
+                        });
+                        _calculateExposure();
+                      },
+                      showSyncButton: true,
+                      isSyncEnabled: isISOSyncEnabled,
+                      onSyncToggle: () {
+                        setState(() {
+                          isISOSyncEnabled = !isISOSyncEnabled;
+                          if (isISOSyncEnabled) {
+                            currentISOKey = newISOKey;
+                            _selectedCurrentISOMapIndex = _selectedNewISOMapIndex;
+                            _currentISOPageController.jumpToPage(_selectedCurrentISOMapIndex);
+                            _calculateExposure();
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    ExposureRow(
+                      label: 'ND Filter',
+                      pageController: _ndFilterPageController,
+                      map: _ndFilterMap,
+                      selectedIndex: _selectedNDFilterMapIndex,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _selectedNDFilterMapIndex = index;
+                          selectedNdFilterKey = _ndFilterMap.keys.toList()[index];
+                        });
+                        _calculateExposure();
+                      },
+                      showSyncButton: false,
+                    ),
+                  ],
+                ),
+              ),
+              Spacer(),
+              SizedBox(
+                height: 40,
+                child: const Text(
+                  'Shutter Seconds',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ExposureResult(
+                calculatedShutterSeconds: calculatedShutterSeconds,
+                shutterMap: _shutterMap,
+              ),
+              Spacer(),
+            ],
+          ),
         ),
       ),
     );
