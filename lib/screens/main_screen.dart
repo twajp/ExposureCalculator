@@ -201,18 +201,27 @@ class _MainScreenState extends State<MainScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Container(
-              margin: EdgeInsets.only(left: 16),
-              child: Row(
+              margin: EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                spacing: 4,
                 children: [
-                  Expanded(
-                    // 3つの HorizontalScrollSelector が左に寄るように Expanded で囲む
-                    child: Column(
-                      children: [
-                        HorizontalScrollSelector(
+                  // Current Aperture
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Aperture',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ), // Title
+                  Row(
+                    children: [
+                      Expanded(
+                        child: HorizontalScrollSelector(
                           pageController: _currentAperturePageController,
                           map: _apertureMap,
                           selectedIndex: _selectedCurrentApertureMapIndex,
-                          title: 'Aperture',
                           onPageChanged: (index) {
                             if (_isUpdatingCurrentFromNew) return;
                             setState(() {
@@ -229,12 +238,50 @@ class _MainScreenState extends State<MainScreen> {
                             _calculateExposure();
                           },
                         ),
-                        SizedBox(height: 16),
-                        HorizontalScrollSelector(
+                      ),
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: IconButton(
+                          padding: EdgeInsets.only(left: 8),
+                          icon: Icon(
+                            size: 24,
+                            isApertureSyncEnabled ? Icons.sync : Icons.sync_disabled,
+                            color: isApertureSyncEnabled ? Colors.blue : Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              isApertureSyncEnabled = !isApertureSyncEnabled; // 状態をトグル
+                              if (isApertureSyncEnabled) {
+                                newApertureKey = currentApertureKey; // 同期状態で初期化
+                                _selectedNewApertureMapIndex = _selectedCurrentApertureMapIndex; // 選択インデックスを同期
+                                _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex); // PageController を同期
+                                _calculateExposure();
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ), // HorizontalScrollSelector と同期ボタン
+                  SizedBox(height: 12),
+                  // Current Shutter Seconds
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Shutter',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ), // Title
+                  Row(
+                    children: [
+                      Expanded(
+                        child: HorizontalScrollSelector(
                           pageController: _currentShutterPageController,
                           map: _shutterMap,
                           selectedIndex: _selectedCurrentShutterMapIndex,
-                          title: 'Shutter',
                           onPageChanged: (index) {
                             setState(() {
                               _selectedCurrentShutterMapIndex = index;
@@ -243,12 +290,28 @@ class _MainScreenState extends State<MainScreen> {
                             _calculateExposure();
                           },
                         ),
-                        SizedBox(height: 16),
-                        HorizontalScrollSelector(
+                      ),
+                      SizedBox(width: 24, height: 24),
+                    ],
+                  ), // HorizontalScrollSelector とSizedBox
+                  SizedBox(height: 12),
+                  // Current ISO
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ISO',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ), // Title
+                  Row(
+                    children: [
+                      Expanded(
+                        child: HorizontalScrollSelector(
                           pageController: _currentISOPageController,
                           map: _isoMap,
                           selectedIndex: _selectedCurrentISOMapIndex,
-                          title: 'ISO',
                           onPageChanged: (index) {
                             if (_isUpdatingCurrentFromNew) return;
                             setState(() {
@@ -265,50 +328,31 @@ class _MainScreenState extends State<MainScreen> {
                             _calculateExposure();
                           },
                         ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 26),
-                      IconButton(
-                        icon: Icon(
-                          isApertureSyncEnabled ? Icons.sync : Icons.sync_disabled,
-                          color: isApertureSyncEnabled ? Colors.blue : Colors.grey,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            isApertureSyncEnabled = !isApertureSyncEnabled; // 状態をトグル
-                            if (isApertureSyncEnabled) {
-                              newApertureKey = currentApertureKey; // 同期状態で初期化
-                              _selectedNewApertureMapIndex = _selectedCurrentApertureMapIndex; // 選択インデックスを同期
-                              _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex); // PageController を同期
-                              _calculateExposure();
-                            }
-                          });
-                        },
                       ),
-                      const SizedBox(height: 98),
-                      IconButton(
-                        icon: Icon(
-                          isISOSyncEnabled ? Icons.sync : Icons.sync_disabled,
-                          color: isISOSyncEnabled ? Colors.blue : Colors.grey,
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: IconButton(
+                          padding: EdgeInsets.only(left: 8),
+                          icon: Icon(
+                            isISOSyncEnabled ? Icons.sync : Icons.sync_disabled,
+                            color: isISOSyncEnabled ? Colors.blue : Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              isISOSyncEnabled = !isISOSyncEnabled; // 状態をトグル
+                              if (isISOSyncEnabled) {
+                                newISOKey = currentISOKey; // 同期状態で初期化
+                                _selectedNewISOMapIndex = _selectedCurrentISOMapIndex; // 選択インデックスを同期
+                                _newISOPageController.jumpToPage(_selectedNewISOMapIndex); // PageController を同期
+                                _calculateExposure();
+                              }
+                            });
+                          },
                         ),
-                        onPressed: () {
-                          setState(() {
-                            isISOSyncEnabled = !isISOSyncEnabled; // 状態をトグル
-                            if (isISOSyncEnabled) {
-                              newISOKey = currentISOKey; // 同期状態で初期化
-                              _selectedNewISOMapIndex = _selectedCurrentISOMapIndex; // 選択インデックスを同期
-                              _newISOPageController.jumpToPage(_selectedNewISOMapIndex); // PageController を同期
-                              _calculateExposure();
-                            }
-                          });
-                        },
                       ),
                     ],
-                  ),
+                  ), // HorizontalScrollSelector と同期ボタン
                 ],
               ),
             ),
@@ -319,17 +363,25 @@ class _MainScreenState extends State<MainScreen> {
             ),
             Container(
               margin: EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
+              child: Column(
+                spacing: 4,
                 children: [
-                  Expanded(
-                    // 3つの HorizontalScrollSelector が左に寄るように Expanded で囲む
-                    child: Column(
-                      children: [
-                        HorizontalScrollSelector(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Aperture',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: HorizontalScrollSelector(
                           pageController: _newAperturePageController,
                           map: _apertureMap,
                           selectedIndex: _selectedNewApertureMapIndex,
-                          title: 'Aperture',
                           onPageChanged: (index) {
                             if (_isUpdatingNewFromCurrent) return;
                             setState(() {
@@ -346,12 +398,27 @@ class _MainScreenState extends State<MainScreen> {
                             _calculateExposure();
                           },
                         ),
-                        SizedBox(height: 16),
-                        HorizontalScrollSelector(
+                      ),
+                      SizedBox(width: 24, height: 24),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ISO',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: HorizontalScrollSelector(
                           pageController: _newISOPageController,
                           map: _isoMap,
                           selectedIndex: _selectedNewISOMapIndex,
-                          title: 'ISO',
                           onPageChanged: (index) {
                             if (_isUpdatingNewFromCurrent) return;
                             setState(() {
@@ -368,12 +435,27 @@ class _MainScreenState extends State<MainScreen> {
                             _calculateExposure();
                           },
                         ),
-                        SizedBox(height: 16),
-                        HorizontalScrollSelector(
+                      ),
+                      SizedBox(width: 24, height: 24),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ND Filter',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: HorizontalScrollSelector(
                           pageController: _ndFilterPageController,
                           map: _ndFilterMap,
                           selectedIndex: _selectedNDFilterMapIndex,
-                          title: 'ND Filter',
                           onPageChanged: (index) {
                             setState(() {
                               _selectedNDFilterMapIndex = index;
@@ -382,12 +464,8 @@ class _MainScreenState extends State<MainScreen> {
                             _calculateExposure();
                           },
                         ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    children: [
-                      SizedBox(width: 32),
+                      ),
+                      SizedBox(width: 24, height: 24),
                     ],
                   ),
                 ],

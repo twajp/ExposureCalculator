@@ -4,7 +4,6 @@ class HorizontalScrollSelector extends StatelessWidget {
   final PageController pageController;
   final Map<String, double> map;
   final int selectedIndex;
-  final String title;
   final ValueChanged<int> onPageChanged;
 
   const HorizontalScrollSelector({
@@ -12,7 +11,6 @@ class HorizontalScrollSelector extends StatelessWidget {
     required this.pageController,
     required this.map,
     required this.selectedIndex,
-    required this.title,
     required this.onPageChanged,
   });
 
@@ -21,16 +19,6 @@ class HorizontalScrollSelector extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
-        SizedBox(height: 4),
         SizedBox(
           height: 30,
           child: PageView.builder(
