@@ -51,7 +51,7 @@ class ExposureRow extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 8),
                   icon: Icon(
                     isSyncEnabled ? Icons.sync : Icons.sync_disabled,
-                    color: isSyncEnabled ? Colors.blue : Colors.grey,
+                    color: isSyncEnabled ?  Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outline,
                   ),
                   onPressed: onSyncToggle,
                 ),

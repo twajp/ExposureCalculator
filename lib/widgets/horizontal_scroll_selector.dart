@@ -20,7 +20,7 @@ class HorizontalScrollSelector extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SizedBox(
-          height: 30,
+          height: 36,
           child: PageView.builder(
             controller: pageController,
             scrollDirection: Axis.horizontal,
@@ -31,7 +31,7 @@ class HorizontalScrollSelector extends StatelessWidget {
               return AnimatedContainer(
                 duration: Duration(milliseconds: 300),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.blue : Colors.grey[300],
+                  color: isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
                 child: Center(
                   child: Text(
