@@ -1,10 +1,21 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../helpers/math_helper.dart';
 import '../utils/constants.dart';
 import '../utils/map_generator.dart';
 import '../widgets/exposure_row.dart';
 import '../widgets/exposure_result.dart';
+
+// Define SharedPreferences keys
+const String keyCurrentAperture = 'currentAperture';
+const String keyCurrentShutter = 'currentShutter';
+const String keyCurrentISO = 'currentISO';
+const String keyNewAperture = 'newAperture';
+const String keyNewISO = 'newISO';
+const String keySelectedNdFilter = 'selectedNdFilter';
+const String keyIsApertureSyncEnabled = 'isApertureSyncEnabled';
+const String keyIsISOSyncEnabled = 'isISOSyncEnabled';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,12 +30,9 @@ class _MainScreenState extends State<MainScreen> {
   late final Map<String, double> _isoMap;
   late final Map<String, double> _ndFilterMap;
 
-  // Current Exposure の宣言
   late String currentApertureKey;
   late String currentShutterKey;
   late String currentISOKey;
-
-  // New Exposure の宣言
   late String newApertureKey;
   late String newISOKey;
   late String selectedNdFilterKey;
@@ -56,6 +64,9 @@ class _MainScreenState extends State<MainScreen> {
   bool _isUpdatingCurrentFromNew = false;
   bool _isUpdatingNewFromCurrent = false;
 
+  // SharedPreferences instance
+  late SharedPreferences _prefs;
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +75,7 @@ class _MainScreenState extends State<MainScreen> {
     _isoMap = generateThirdStopISOMap();
     _ndFilterMap = generateNDFilterMap();
 
+    // Initialize default values
     currentApertureKey = _apertureMap.keys.toList()[defaultCurrentApertureIndex];
     currentShutterKey = _shutterMap.keys.toList()[defaultCurrentShutterIndex];
     currentISOKey = _isoMap.keys.toList()[defaultCurrentISOIndex];
@@ -80,35 +92,18 @@ class _MainScreenState extends State<MainScreen> {
     _selectedNDFilterMapIndex = defaultNDIndex;
 
     // 初期インデックスを設定して PageController を初期化
-    _currentAperturePageController = PageController(
-      viewportFraction: 0.3,
-      initialPage: _selectedCurrentApertureMapIndex, // Current Aperture の初期インデックス
-    );
-    _currentShutterPageController = PageController(
-      viewportFraction: 0.3,
-      initialPage: _selectedCurrentShutterMapIndex, // Current Shutter の初期インデックス
-    );
-    _currentISOPageController = PageController(
-      viewportFraction: 0.3,
-      initialPage: _selectedCurrentISOMapIndex, // Current ISO の初期インデックス
-    );
-    _newAperturePageController = PageController(
-      viewportFraction: 0.3,
-      initialPage: _selectedNewApertureMapIndex, // New Aperture の初期インデックス
-    );
-    _newISOPageController = PageController(
-      viewportFraction: 0.3,
-      initialPage: _selectedNewISOMapIndex, // New ISO の初期インデックス
-    );
-    _ndFilterPageController = PageController(
-      viewportFraction: 0.3,
-      initialPage: _selectedNDFilterMapIndex, // ND フィルターの初期インデックス
-    );
+    _currentAperturePageController = PageController(viewportFraction: 0.3, initialPage: _selectedCurrentApertureMapIndex);
+    _currentShutterPageController = PageController(viewportFraction: 0.3, initialPage: _selectedCurrentShutterMapIndex);
+    _currentISOPageController = PageController(viewportFraction: 0.3, initialPage: _selectedCurrentISOMapIndex);
+    _newAperturePageController = PageController(viewportFraction: 0.3, initialPage: _selectedNewApertureMapIndex);
+    _newISOPageController = PageController(viewportFraction: 0.3, initialPage: _selectedNewISOMapIndex);
+    _ndFilterPageController = PageController(viewportFraction: 0.3, initialPage: _selectedNDFilterMapIndex);
 
-    _calculateExposure();
+    // Initialize SharedPreferences and load saved state
+    _initializePreferences();
 
     if (kDebugMode) {
-      print('\n===Loaded Maps===\n'
+      print('===Loaded Maps===\n'
           'Aperture            : ${_apertureMap.keys}\n'
           'Shutter Speeds      : ${_shutterMap.keys}\n'
           'ISO                 : ${_isoMap.keys}\n\n'
@@ -141,6 +136,46 @@ class _MainScreenState extends State<MainScreen> {
           'New ISO             : ${_isoMap.keys.toList()[defaultNewISOIndex]}\n'
           'ND Filter           : ${_ndFilterMap.keys.toList()[defaultNDIndex]}\n');
     }
+  }
+
+  Future<void> _initializePreferences() async {
+    _prefs = await SharedPreferences.getInstance();
+
+    // Load saved keys or use defaults
+    currentApertureKey = _prefs.getString(keyCurrentAperture) ?? _apertureMap.keys.toList()[defaultCurrentApertureIndex];
+    currentShutterKey = _prefs.getString(keyCurrentShutter) ?? _shutterMap.keys.toList()[defaultCurrentShutterIndex];
+    currentISOKey = _prefs.getString(keyCurrentISO) ?? _isoMap.keys.toList()[defaultCurrentISOIndex];
+    newApertureKey = _prefs.getString(keyNewAperture) ?? _apertureMap.keys.toList()[defaultNewApertureIndex];
+    newISOKey = _prefs.getString(keyNewISO) ?? _isoMap.keys.toList()[defaultNewISOIndex];
+    selectedNdFilterKey = _prefs.getString(keySelectedNdFilter) ?? _ndFilterMap.keys.toList()[defaultNDIndex];
+    isApertureSyncEnabled = _prefs.getBool(keyIsApertureSyncEnabled) ?? false;
+    isISOSyncEnabled = _prefs.getBool(keyIsISOSyncEnabled) ?? false;
+
+    // Update selected indices based on loaded keys
+    _selectedCurrentApertureMapIndex = _apertureMap.keys.toList().indexOf(currentApertureKey);
+    _selectedCurrentShutterMapIndex = _shutterMap.keys.toList().indexOf(currentShutterKey);
+    _selectedCurrentISOMapIndex = _isoMap.keys.toList().indexOf(currentISOKey);
+    _selectedNewApertureMapIndex = _apertureMap.keys.toList().indexOf(newApertureKey);
+    _selectedNewISOMapIndex = _isoMap.keys.toList().indexOf(newISOKey);
+    _selectedNDFilterMapIndex = _ndFilterMap.keys.toList().indexOf(selectedNdFilterKey);
+
+    // Update PageControllers after loading preferences
+    _currentAperturePageController.jumpToPage(_selectedCurrentApertureMapIndex);
+    _currentShutterPageController.jumpToPage(_selectedCurrentShutterMapIndex);
+    _currentISOPageController.jumpToPage(_selectedCurrentISOMapIndex);
+    _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex);
+    _newISOPageController.jumpToPage(_selectedNewISOMapIndex);
+    _ndFilterPageController.jumpToPage(_selectedNDFilterMapIndex);
+
+    // Calculate exposure with loaded settings
+    _calculateExposure();
+
+    // For debugging purposes
+    if (kDebugMode) {
+      print('Loaded preferences successfully.');
+    }
+
+    setState(() {}); // Update UI with loaded preferences
   }
 
   /// ストップの差分を合計して、新シャッター速度を計算
@@ -192,218 +227,270 @@ class _MainScreenState extends State<MainScreen> {
         title: const Text('Exposure Calculator'),
       ),
       body: SafeArea(
-        child: Expanded(
-          child: Column(
-            children: [
-              Spacer(),
-              // Current Exposure セクション
-              const Text(
-                'Current Exposure',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    ExposureRow(
-                      label: 'Aperture',
-                      pageController: _currentAperturePageController,
-                      map: _apertureMap,
-                      selectedIndex: _selectedCurrentApertureMapIndex,
-                      onPageChanged: (index) {
-                        if (_isUpdatingCurrentFromNew) return;
-                        setState(() {
-                          _isUpdatingNewFromCurrent = true;
-                          _selectedCurrentApertureMapIndex = index;
-                          currentApertureKey = _apertureMap.keys.toList()[index];
-                          if (isApertureSyncEnabled) {
-                            newApertureKey = currentApertureKey;
-                            _selectedNewApertureMapIndex = index;
-                            _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex);
-                          }
-                          _isUpdatingNewFromCurrent = false;
-                        });
-                        _calculateExposure();
-                      },
-                      showSyncButton: true,
-                      isSyncEnabled: isApertureSyncEnabled,
-                      onSyncToggle: () {
-                        setState(() {
-                          isApertureSyncEnabled = !isApertureSyncEnabled;
-                          if (isApertureSyncEnabled) {
-                            newApertureKey = currentApertureKey;
-                            _selectedNewApertureMapIndex = _selectedCurrentApertureMapIndex;
-                            _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex);
-                            _calculateExposure();
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    ExposureRow(
-                      label: 'Shutter',
-                      pageController: _currentShutterPageController,
-                      map: _shutterMap,
-                      selectedIndex: _selectedCurrentShutterMapIndex,
-                      onPageChanged: (index) {
-                        setState(() {
-                          _selectedCurrentShutterMapIndex = index;
-                          currentShutterKey = _shutterMap.keys.toList()[index];
-                        });
-                        _calculateExposure();
-                      },
-                      showSyncButton: false,
-                    ),
-                    const SizedBox(height: 12),
-                    ExposureRow(
-                      label: 'ISO',
-                      pageController: _currentISOPageController,
-                      map: _isoMap,
-                      selectedIndex: _selectedCurrentISOMapIndex,
-                      onPageChanged: (index) {
-                        if (_isUpdatingCurrentFromNew) return;
-                        setState(() {
-                          _isUpdatingNewFromCurrent = true;
-                          _selectedCurrentISOMapIndex = index;
-                          currentISOKey = _isoMap.keys.toList()[index];
-                          if (isISOSyncEnabled) {
-                            newISOKey = currentISOKey;
-                            _selectedNewISOMapIndex = index;
-                            _newISOPageController.jumpToPage(_selectedNewISOMapIndex);
-                          }
-                          _isUpdatingNewFromCurrent = false;
-                        });
-                        _calculateExposure();
-                      },
-                      showSyncButton: true,
-                      isSyncEnabled: isISOSyncEnabled,
-                      onSyncToggle: () {
-                        setState(() {
-                          isISOSyncEnabled = !isISOSyncEnabled;
-                          if (isISOSyncEnabled) {
-                            newISOKey = currentISOKey;
-                            _selectedNewISOMapIndex = _selectedCurrentISOMapIndex;
-                            _newISOPageController.jumpToPage(_selectedNewISOMapIndex);
-                            _calculateExposure();
-                          }
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Spacer(),
-              // New Exposure セクション
-              const Text(
-                'New Exposure',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    ExposureRow(
-                      label: 'Aperture',
-                      pageController: _newAperturePageController,
-                      map: _apertureMap,
-                      selectedIndex: _selectedNewApertureMapIndex,
-                      onPageChanged: (index) {
-                        if (_isUpdatingNewFromCurrent) return;
-                        setState(() {
-                          _isUpdatingCurrentFromNew = true;
+        child: Column(
+          children: [
+            Spacer(),
+            // Current Exposure Section
+            const Text(
+              'Current Exposure',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  ExposureRow(
+                    label: 'Aperture',
+                    pageController: _currentAperturePageController,
+                    map: _apertureMap,
+                    selectedIndex: _selectedCurrentApertureMapIndex,
+                    onPageChanged: (index) async {
+                      if (_isUpdatingCurrentFromNew) return;
+                      setState(() {
+                        _isUpdatingNewFromCurrent = true;
+                        _selectedCurrentApertureMapIndex = index;
+                        currentApertureKey = _apertureMap.keys.toList()[index];
+                        if (isApertureSyncEnabled) {
+                          newApertureKey = currentApertureKey;
                           _selectedNewApertureMapIndex = index;
-                          newApertureKey = _apertureMap.keys.toList()[index];
-                          if (isApertureSyncEnabled) {
-                            currentApertureKey = newApertureKey;
-                            _selectedCurrentApertureMapIndex = index;
-                            _currentAperturePageController.jumpToPage(_selectedCurrentApertureMapIndex);
-                          }
-                          _isUpdatingCurrentFromNew = false;
-                        });
-                        _calculateExposure();
-                      },
-                      showSyncButton: true,
-                      isSyncEnabled: isApertureSyncEnabled,
-                      onSyncToggle: () {
-                        setState(() {
-                          isApertureSyncEnabled = !isApertureSyncEnabled;
-                          if (isApertureSyncEnabled) {
-                            currentApertureKey = newApertureKey;
-                            _selectedCurrentApertureMapIndex = _selectedNewApertureMapIndex;
-                            _currentAperturePageController.jumpToPage(_selectedCurrentApertureMapIndex);
-                            _calculateExposure();
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    ExposureRow(
-                      label: 'ISO',
-                      pageController: _newISOPageController,
-                      map: _isoMap,
-                      selectedIndex: _selectedNewISOMapIndex,
-                      onPageChanged: (index) {
-                        if (_isUpdatingNewFromCurrent) return;
-                        setState(() {
-                          _isUpdatingCurrentFromNew = true;
+                          _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex);
+                        }
+                        _isUpdatingNewFromCurrent = false;
+                      });
+                      _calculateExposure();
+
+                      // Save to SharedPreferences
+                      await _prefs.setString(keyCurrentAperture, currentApertureKey);
+                      if (isApertureSyncEnabled) {
+                        await _prefs.setString(keyNewAperture, newApertureKey);
+                      }
+                    },
+                    showSyncButton: true,
+                    isSyncEnabled: isApertureSyncEnabled,
+                    onSyncToggle: () async {
+                      setState(() {
+                        isApertureSyncEnabled = !isApertureSyncEnabled;
+                        if (isApertureSyncEnabled) {
+                          newApertureKey = currentApertureKey;
+                          _selectedNewApertureMapIndex = _selectedCurrentApertureMapIndex;
+                          _newAperturePageController.jumpToPage(_selectedNewApertureMapIndex);
+                          _calculateExposure();
+                        }
+                      });
+
+                      // Save sync state and possibly new aperture key
+                      await _prefs.setBool(keyIsApertureSyncEnabled, isApertureSyncEnabled);
+                      if (isApertureSyncEnabled) {
+                        await _prefs.setString(keyNewAperture, newApertureKey);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  ExposureRow(
+                    label: 'Shutter',
+                    pageController: _currentShutterPageController,
+                    map: _shutterMap,
+                    selectedIndex: _selectedCurrentShutterMapIndex,
+                    onPageChanged: (index) async {
+                      setState(() {
+                        _selectedCurrentShutterMapIndex = index;
+                        currentShutterKey = _shutterMap.keys.toList()[index];
+                      });
+                      _calculateExposure();
+
+                      // Save to SharedPreferences
+                      await _prefs.setString(keyCurrentShutter, currentShutterKey);
+                    },
+                    showSyncButton: false,
+                  ),
+                  const SizedBox(height: 12),
+                  ExposureRow(
+                    label: 'ISO',
+                    pageController: _currentISOPageController,
+                    map: _isoMap,
+                    selectedIndex: _selectedCurrentISOMapIndex,
+                    onPageChanged: (index) async {
+                      if (_isUpdatingCurrentFromNew) return;
+                      setState(() {
+                        _isUpdatingNewFromCurrent = true;
+                        _selectedCurrentISOMapIndex = index;
+                        currentISOKey = _isoMap.keys.toList()[index];
+                        if (isISOSyncEnabled) {
+                          newISOKey = currentISOKey;
                           _selectedNewISOMapIndex = index;
-                          newISOKey = _isoMap.keys.toList()[index];
-                          if (isISOSyncEnabled) {
-                            currentISOKey = newISOKey;
-                            _selectedCurrentISOMapIndex = index;
-                            _currentISOPageController.jumpToPage(_selectedCurrentISOMapIndex);
-                          }
-                          _isUpdatingCurrentFromNew = false;
-                        });
-                        _calculateExposure();
-                      },
-                      showSyncButton: true,
-                      isSyncEnabled: isISOSyncEnabled,
-                      onSyncToggle: () {
-                        setState(() {
-                          isISOSyncEnabled = !isISOSyncEnabled;
-                          if (isISOSyncEnabled) {
-                            currentISOKey = newISOKey;
-                            _selectedCurrentISOMapIndex = _selectedNewISOMapIndex;
-                            _currentISOPageController.jumpToPage(_selectedCurrentISOMapIndex);
-                            _calculateExposure();
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    ExposureRow(
-                      label: 'ND Filter',
-                      pageController: _ndFilterPageController,
-                      map: _ndFilterMap,
-                      selectedIndex: _selectedNDFilterMapIndex,
-                      onPageChanged: (index) {
-                        setState(() {
-                          _selectedNDFilterMapIndex = index;
-                          selectedNdFilterKey = _ndFilterMap.keys.toList()[index];
-                        });
-                        _calculateExposure();
-                      },
-                      showSyncButton: false,
-                    ),
-                  ],
-                ),
+                          _newISOPageController.jumpToPage(_selectedNewISOMapIndex);
+                        }
+                        _isUpdatingNewFromCurrent = false;
+                      });
+                      _calculateExposure();
+
+                      // Save to SharedPreferences
+                      await _prefs.setString(keyCurrentISO, currentISOKey);
+                      if (isISOSyncEnabled) {
+                        await _prefs.setString(keyNewISO, newISOKey);
+                      }
+                    },
+                    showSyncButton: true,
+                    isSyncEnabled: isISOSyncEnabled,
+                    onSyncToggle: () async {
+                      setState(() {
+                        isISOSyncEnabled = !isISOSyncEnabled;
+                        if (isISOSyncEnabled) {
+                          newISOKey = currentISOKey;
+                          _selectedNewISOMapIndex = _selectedCurrentISOMapIndex;
+                          _newISOPageController.jumpToPage(_selectedNewISOMapIndex);
+                          _calculateExposure();
+                        }
+                      });
+
+                      // Save sync state and possibly new ISO key
+                      await _prefs.setBool(keyIsISOSyncEnabled, isISOSyncEnabled);
+                      if (isISOSyncEnabled) {
+                        await _prefs.setString(keyNewISO, newISOKey);
+                      }
+                    },
+                  ),
+                ],
               ),
-              Spacer(),
-              SizedBox(
-                height: 40,
-                child: const Text(
-                  'Shutter Seconds',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+            ),
+            Spacer(),
+            // New Exposure Section
+            const Text(
+              'New Exposure',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  ExposureRow(
+                    label: 'Aperture',
+                    pageController: _newAperturePageController,
+                    map: _apertureMap,
+                    selectedIndex: _selectedNewApertureMapIndex,
+                    onPageChanged: (index) async {
+                      if (_isUpdatingNewFromCurrent) return;
+                      setState(() {
+                        _isUpdatingCurrentFromNew = true;
+                        _selectedNewApertureMapIndex = index;
+                        newApertureKey = _apertureMap.keys.toList()[index];
+                        if (isApertureSyncEnabled) {
+                          currentApertureKey = newApertureKey;
+                          _selectedCurrentApertureMapIndex = index;
+                          _currentAperturePageController.jumpToPage(_selectedCurrentApertureMapIndex);
+                        }
+                        _isUpdatingCurrentFromNew = false;
+                      });
+                      _calculateExposure();
+
+                      // Save to SharedPreferences
+                      await _prefs.setString(keyNewAperture, newApertureKey);
+                      if (isApertureSyncEnabled) {
+                        await _prefs.setString(keyCurrentAperture, currentApertureKey);
+                      }
+                    },
+                    showSyncButton: true,
+                    isSyncEnabled: isApertureSyncEnabled,
+                    onSyncToggle: () async {
+                      setState(() {
+                        isApertureSyncEnabled = !isApertureSyncEnabled;
+                        if (isApertureSyncEnabled) {
+                          currentApertureKey = newApertureKey;
+                          _selectedCurrentApertureMapIndex = _selectedNewApertureMapIndex;
+                          _currentAperturePageController.jumpToPage(_selectedCurrentApertureMapIndex);
+                          _calculateExposure();
+                        }
+                      });
+
+                      // Save sync state and possibly current aperture key
+                      await _prefs.setBool(keyIsApertureSyncEnabled, isApertureSyncEnabled);
+                      if (isApertureSyncEnabled) {
+                        await _prefs.setString(keyCurrentAperture, currentApertureKey);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  ExposureRow(
+                    label: 'ISO',
+                    pageController: _newISOPageController,
+                    map: _isoMap,
+                    selectedIndex: _selectedNewISOMapIndex,
+                    onPageChanged: (index) async {
+                      if (_isUpdatingNewFromCurrent) return;
+                      setState(() {
+                        _isUpdatingCurrentFromNew = true;
+                        _selectedNewISOMapIndex = index;
+                        newISOKey = _isoMap.keys.toList()[index];
+                        if (isISOSyncEnabled) {
+                          currentISOKey = newISOKey;
+                          _selectedCurrentISOMapIndex = index;
+                          _currentISOPageController.jumpToPage(_selectedCurrentISOMapIndex);
+                        }
+                        _isUpdatingCurrentFromNew = false;
+                      });
+                      _calculateExposure();
+
+                      // Save to SharedPreferences
+                      await _prefs.setString(keyNewISO, newISOKey);
+                      if (isISOSyncEnabled) {
+                        await _prefs.setString(keyCurrentISO, currentISOKey);
+                      }
+                    },
+                    showSyncButton: true,
+                    isSyncEnabled: isISOSyncEnabled,
+                    onSyncToggle: () async {
+                      setState(() {
+                        isISOSyncEnabled = !isISOSyncEnabled;
+                        if (isISOSyncEnabled) {
+                          currentISOKey = newISOKey;
+                          _selectedCurrentISOMapIndex = _selectedNewISOMapIndex;
+                          _currentISOPageController.jumpToPage(_selectedCurrentISOMapIndex);
+                          _calculateExposure();
+                        }
+                      });
+
+                      // Save sync state and possibly current ISO key
+                      await _prefs.setBool(keyIsISOSyncEnabled, isISOSyncEnabled);
+                      if (isISOSyncEnabled) {
+                        await _prefs.setString(keyCurrentISO, currentISOKey);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  ExposureRow(
+                    label: 'ND Filter',
+                    pageController: _ndFilterPageController,
+                    map: _ndFilterMap,
+                    selectedIndex: _selectedNDFilterMapIndex,
+                    onPageChanged: (index) async {
+                      setState(() {
+                        _selectedNDFilterMapIndex = index;
+                        selectedNdFilterKey = _ndFilterMap.keys.toList()[index];
+                      });
+                      _calculateExposure();
+
+                      // Save to SharedPreferences
+                      await _prefs.setString(keySelectedNdFilter, selectedNdFilterKey);
+                    },
+                    showSyncButton: false,
+                  ),
+                ],
               ),
-              ExposureResult(
-                calculatedShutterSeconds: calculatedShutterSeconds,
-                shutterMap: _shutterMap,
+            ),
+            Spacer(),
+            SizedBox(
+              height: 40,
+              child: const Text(
+                'Shutter Seconds',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              Spacer(),
-            ],
-          ),
+            ),
+            ExposureResult(
+              calculatedShutterSeconds: calculatedShutterSeconds,
+              shutterMap: _shutterMap,
+            ),
+            Spacer(),
+          ],
         ),
       ),
     );
