@@ -42,7 +42,6 @@ class HorizontalScrollSelector extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(horizontal: 5), // 項目間のスペース
                   decoration: BoxDecoration(
                     color: isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.onPrimaryContainer,
-                    // color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey[300],
                     borderRadius: BorderRadius.circular(8), // 角を丸める
                   ),
                   alignment: Alignment.center,
