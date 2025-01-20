@@ -188,7 +188,7 @@ Map<String, double> generateFullStopISOMap() {
 Map<String, double> generateNDFilterMap() {
   Map<String, double> res = {};
   for (int i = 0; i < ndFilterList.length; i++) {
-    double stop = log2(ndFilterList[i] as double);
+    double stop = log2(ndFilterList[i].toDouble());
     if (i == 0) {
       res['None'] = stop;
     } else {
